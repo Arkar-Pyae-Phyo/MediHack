@@ -8,6 +8,7 @@ import DoctorDashboardScreen from './screens/DoctorScreen/DoctorDashboardScreen'
 import NurseTasksScreen from './screens/NurseTasksScreen';
 import PharmacistReviewScreen from './screens/PharmacistReviewScreen';
 import AdminDashboardScreen from './screens/AdminDashboardScreen';
+import FamilyViewScreen from './screens/FamilyViewScreen';
 import LoginScreen from './screens/LoginScreen';
 
 type RootStackParamList = {
@@ -17,6 +18,7 @@ type RootStackParamList = {
   Nurse: undefined;
   Pharmacist: undefined;
   Admin: undefined;
+  Family: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -35,6 +37,7 @@ const roleScreenMap = {
   Nurse: NurseTasksScreen,
   Pharmacist: PharmacistReviewScreen,
   Admin: AdminDashboardScreen,
+  Family: FamilyViewScreen,
 };
 
 export default function App() {
