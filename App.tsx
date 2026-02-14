@@ -77,6 +77,7 @@ const MainTabs = ({ initialRoute }: MainTabsProps) => (
 export default function App() {
   type UserProfile = {
     name: string;
+    age: number;
     role: keyof MainTabParamList;
   };
 
@@ -86,11 +87,11 @@ export default function App() {
     return user?.role ?? 'Home';
   }, [user?.role]);
 
-  const handleLogin = (profile: { name: string; role: string }) => {
+  const handleLogin = (profile: { name: string; age: number; role: string }) => {
     if (profile.role && profile.role in iconMap) {
-      setUser({ name: profile.name, role: profile.role as keyof MainTabParamList });
+      setUser({ name: profile.name, age: profile.age, role: profile.role as keyof MainTabParamList });
     } else {
-      setUser({ name: profile.name, role: 'Home' });
+      setUser({ name: profile.name, age: profile.age, role: 'Home' });
     }
   };
 

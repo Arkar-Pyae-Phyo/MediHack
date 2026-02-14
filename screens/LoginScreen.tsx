@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -16,7 +17,7 @@ type RoleOption = {
 };
 
 type LoginScreenProps = {
-  onLogin: (profile: { name: string; role: string }) => void;
+  onLogin: (profile: { name: string; age: number; role: string }) => void;
 };
 
 const ROLE_OPTIONS: RoleOption[] = [
@@ -24,20 +25,22 @@ const ROLE_OPTIONS: RoleOption[] = [
   { key: 'Doctor', label: 'Doctor', description: 'Review clinical dashboards and actions.' },
   { key: 'Nurse', label: 'Nurse', description: 'Coordinate bedside tasks and vitals.' },
   { key: 'Pharmacist', label: 'Pharmacist', description: 'Monitor medications and safety alerts.' },
-  { key: 'Family', label: 'Family', description: 'See friendly updates and guidance.' },
 ];
 
 const LoginScreen = ({ onLogin }: LoginScreenProps) => {
   const [name, setName] = useState('');
+  const [age, setAge] = useState('');
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
 
-  const isDisabled = !name.trim() || !selectedRole;
+  const parsedAge = Number(age.trim());
+  const isAgeValid = !Number.isNaN(parsedAge) && parsedAge > 0 && parsedAge < 120;
+  const isDisabled = !name.trim() || !selectedRole || !isAgeValid;
 
   const handleSubmit = () => {
-    if (isDisabled || !selectedRole) {
+    if (isDisabled || !selectedRole || !isAgeValid) {
       return;
     }
-    onLogin({ name: name.trim(), role: selectedRole });
+    onLogin({ name: name.trim(), age: parsedAge, role: selectedRole });
   };
 
   return (
@@ -45,9 +48,13 @@ const LoginScreen = ({ onLogin }: LoginScreenProps) => {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={styles.inner}>
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.inner}
+        keyboardShouldPersistTaps="handled"
+      >
         <Text style={styles.title}>Welcome to CareMind</Text>
-        <Text style={styles.subtitle}>Enter your name and choose how you support care today.</Text>
+        <Text style={styles.subtitle}>Tell us who you are and choose one role.</Text>
 
         <Text style={styles.label}>Your name</Text>
         <TextInput
@@ -57,6 +64,16 @@ const LoginScreen = ({ onLogin }: LoginScreenProps) => {
           placeholderTextColor="#cbd5f5"
           style={styles.input}
           autoCapitalize="words"
+        />
+
+        <Text style={styles.label}>Your age</Text>
+        <TextInput
+          value={age}
+          onChangeText={setAge}
+          placeholder="30"
+          placeholderTextColor="#cbd5f5"
+          style={styles.input}
+          keyboardType="number-pad"
         />
 
         <Text style={[styles.label, styles.roleLabel]}>Select your role</Text>
@@ -88,7 +105,7 @@ const LoginScreen = ({ onLogin }: LoginScreenProps) => {
         >
           <Text style={styles.submitText}>Enter Workspace</Text>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 };
@@ -98,10 +115,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#0f172a',
   },
-  inner: {
+  scrollView: {
     flex: 1,
+  },
+  inner: {
     paddingHorizontal: 24,
     paddingTop: 72,
+    paddingBottom: 60,
   },
   title: {
     fontSize: 32,
