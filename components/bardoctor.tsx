@@ -1,47 +1,46 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, Platform } from 'react-native';
 import { LogOut } from 'lucide-react-native';
 
-type RoleHeaderProps = {
-  role: string;
+type BardoctorProps = {
+  activeTab: 'home' | 'dashboard';
+  onNavigate: (tab: 'home' | 'dashboard') => void;
   onLogout: () => void;
-  activeTab?: 'home' | 'dashboard';
-  onNavigate?: (tab: 'home' | 'dashboard') => void;
 };
 
-const RoleHeader = ({ role, onLogout, activeTab = 'dashboard', onNavigate }: RoleHeaderProps) => {
+const Bardoctor = ({ activeTab, onNavigate, onLogout }: BardoctorProps) => {
   return (
     <View style={styles.headerBar}>
-      {/* Left - Home */}
+      {/* ปุ่มไปหน้า Home (Chat) */}
       <TouchableOpacity
         style={[
           styles.navButton,
           activeTab === 'home' && styles.activeNavButton,
         ]}
-        onPress={() => onNavigate?.('home')}
-        activeOpacity={0.7}
+        onPress={() => onNavigate('home')}
       >
         <Text style={styles.navIcon}>🏠</Text>
+        <Text style={[styles.navText, activeTab === 'home' && styles.activeNavText]}>แชท AI</Text>
       </TouchableOpacity>
 
-      {/* Center - Dashboard */}
+      {/* ปุ่มไปหน้า Dashboard */}
       <TouchableOpacity
         style={[
           styles.navButton,
           activeTab === 'dashboard' && styles.activeNavButton,
         ]}
-        onPress={() => onNavigate?.('dashboard')}
-        activeOpacity={0.7}
+        onPress={() => onNavigate('dashboard')}
       >
         <Text style={styles.navIcon}>📊</Text>
+        <Text style={[styles.navText, activeTab === 'dashboard' && styles.activeNavText]}>รายการ</Text>
       </TouchableOpacity>
 
-      {/* Right - Logout */}
+      {/* ปุ่ม Logout */}
       <TouchableOpacity
         style={styles.logoutButton}
         onPress={onLogout}
-        activeOpacity={0.8}
       >
-        <LogOut size={20} color="#ef4444" strokeWidth={2.5} />
+        <LogOut size={20} color="#ef4444" />
+        <Text style={styles.logoutText}>ออก</Text>
       </TouchableOpacity>
     </View>
   );
@@ -52,55 +51,48 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingVertical: 10,
+    paddingBottom: Platform.OS === 'ios' ? 30 : 15, // เผื่อระยะสำหรับ iPhone รุ่นใหม่
     backgroundColor: '#ffffff',
     borderTopWidth: 1,
     borderTopColor: '#e0f2fe',
-    shadowColor: '#0284c7',
+    elevation: 20,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: -3 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowRadius: 5,
   },
   navButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#f8fafc',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#0f172a',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
+    paddingHorizontal: 20,
+    paddingVertical: 5,
+    borderRadius: 15,
   },
   activeNavButton: {
     backgroundColor: '#e0f2fe',
-    borderWidth: 2,
-    borderColor: '#0284c7',
-    shadowColor: '#0284c7',
-    shadowOpacity: 0.2,
   },
   navIcon: {
-    fontSize: 28,
+    fontSize: 22,
+  },
+  navText: {
+    fontSize: 12,
+    color: '#64748b',
+    marginTop: 2,
+    fontWeight: '500',
+  },
+  activeNavText: {
+    color: '#0284c7',
   },
   logoutButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#fef2f2',
-    borderWidth: 2,
-    borderColor: '#fecaca',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#ef4444',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 3,
   },
+  logoutText: {
+    fontSize: 12,
+    color: '#ef4444',
+    marginTop: 2,
+  }
 });
 
-export default RoleHeader;
+export default Bardoctor;

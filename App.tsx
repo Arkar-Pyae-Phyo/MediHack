@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StatusBar } from 'expo-status-bar';
 
 import PatientSummaryScreen from './screens/PatientSummaryScreen';
-import DoctorDashboardScreen from './screens/DoctorScreen/DoctorDashboardScreen';
+import DoctorDashboardScreen from './screens/DoctorScreen/DashboardScreen';
+import DoctorHome from './screens/DoctorScreen/Home';
+import Bardoctor from './components/bardoctor';
 import NurseTasksScreen from './screens/NurseTasksScreen';
 import PharmacistReviewScreen from './screens/PharmacistReviewScreen';
 import LoginScreen from './screens/LoginScreen';
@@ -18,6 +21,7 @@ type RootStackParamList = {
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+const Tab = createBottomTabNavigator();
 
 const navigationTheme = {
   ...DefaultTheme,
@@ -64,9 +68,38 @@ export default function App() {
       <StatusBar style="dark" />
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {user && RoleScreen ? (
-          <Stack.Screen name={user.role}>
-            {() => <RoleScreen onLogout={handleLogout} />}
-          </Stack.Screen>
+          // For Doctor role we use a Bottom Tab navigator so we can use the custom Bardoctor tabBar
+          user.role === 'Doctor' ? (
+            <Stack.Screen name="Doctor">
+              {() => (
+                <Tab.Navigator
+                  screenOptions={{ headerShown: false }}
+                  tabBar={(props) => {
+                    const routeName = props.state.routes[props.state.index].name;
+                    const activeTab = routeName === 'Home' ? 'home' : 'dashboard';
+                    const onNavigate = (tab: 'home' | 'dashboard') => {
+                      const target = tab === 'home' ? 'Home' : 'Dashboard';
+                      props.navigation.navigate(target as never);
+                    };
+                    return (
+                      <Bardoctor
+                        activeTab={activeTab}
+                        onNavigate={onNavigate}
+                        onLogout={handleLogout}
+                      />
+                    );
+                  }}
+                >
+                  <Tab.Screen name="Home">{() => <DoctorHome onLogout={handleLogout} />}</Tab.Screen>
+                  <Tab.Screen name="Dashboard">{() => <DoctorDashboardScreen onLogout={handleLogout} />}</Tab.Screen>
+                </Tab.Navigator>
+              )}
+            </Stack.Screen>
+          ) : (
+            <Stack.Screen name={user.role}>
+              {() => <RoleScreen onLogout={handleLogout} />}
+            </Stack.Screen>
+          )
         ) : (
           <Stack.Screen name="Login">
             {() => <LoginScreen onLogin={handleLogin} />}

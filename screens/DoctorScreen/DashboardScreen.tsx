@@ -11,7 +11,6 @@ import {
   View,
 } from 'react-native';
 
-import RoleHeader from '../../components/bardoctor';
 
 type PatientStatus = 'stable' | 'improving' | 'critical';
 
@@ -483,8 +482,6 @@ const DashboardScreen = ({ onLogout }: { onLogout: () => void }) => {
             )}
           </View>
         </ScrollView>
-        
-        <RoleHeader role="Doctor" onLogout={onLogout} />
       </View>
     </SafeAreaView>
   );
@@ -966,7 +963,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#94a3b8',
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 20,   
   },
   emptyButton: {
     backgroundColor: '#0284c7',
