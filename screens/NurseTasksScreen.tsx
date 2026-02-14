@@ -1,7 +1,5 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import {
-  ActivityIndicator,
-  RefreshControl,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -11,7 +9,15 @@ import {
 import type { TextStyle } from 'react-native';
 
 import RoleHeader from '../components/RoleHeader';
-import { askGemini } from '../services/gemini';
+
+type Patient = {
+  id: string;
+  name: string;
+  age: number;
+  room: string;
+  condition: string;
+  priority: 'high' | 'medium' | 'low';
+};
 
 type NursingTask = {
   id: string;
@@ -31,11 +37,6 @@ type VitalTrend = {
   change: string;
   direction: 'up' | 'down' | 'flat';
   timestamp: string;
-};
-
-type GeminiTasks = {
-  actionableTasks: string;
-  escalationNotes: string;
 };
 
 const currentTasks: NursingTask[] = [
@@ -68,71 +69,6 @@ const vitalTrends: VitalTrend[] = [
   { metric: 'Weight', change: '178 lbs → 177 lbs', direction: 'down', timestamp: 'Last 7d' },
 ];
 
-const buildNursePrompt = (orders: DoctorOrder[], tasks: NursingTask[], vitals: VitalTrend[]) => {
-  const payload = {
-    latestOrders: orders,
-    currentTasks: tasks,
-    vitalTrends: vitals,
-  };
-
-  return [
-    'You are assisting the charge nurse in triaging today\'s tasks.',
-    'Convert the doctor orders into actionable nursing tasks with clear priority. Note any escalations or confirmations needed.',
-    'Respond with two sections titled: Actionable tasks, Escalation notes.',
-    'Keep items concise, up to 4 bullet points per section.',
-    `Input data: ${JSON.stringify(payload)}`,
-  ].join('\n');
-};
-
-const defaultGeminiTasks: GeminiTasks = {
-  actionableTasks: 'No new tasks at this time.',
-  escalationNotes: 'No escalations required.',
-};
-
-const parseTasksResponse = (text: string): GeminiTasks => {
-  if (!text) {
-    return defaultGeminiTasks;
-  }
-
-  const sections = { ...defaultGeminiTasks };
-  const buffers: Record<keyof GeminiTasks, string[]> = {
-    actionableTasks: [],
-    escalationNotes: [],
-  };
-  const lines = text.split(/\n+/g).map((line) => line.trim()).filter(Boolean);
-
-  let currentKey: keyof GeminiTasks | null = null;
-  const resolveKey = (heading: string): keyof GeminiTasks | null => {
-    const normalized = heading.toLowerCase();
-    if (normalized.includes('action')) return 'actionableTasks';
-    if (normalized.includes('escalation')) return 'escalationNotes';
-    return null;
-  };
-
-  for (const line of lines) {
-    const headingMatch = /^([A-Za-z\s]+):?$/.exec(line);
-    if (headingMatch) {
-      const key = resolveKey(headingMatch[1]);
-      if (key) {
-        currentKey = key;
-        continue;
-      }
-    }
-
-    if (currentKey) {
-      buffers[currentKey].push(line.replace(/^[-\u2022\u25CF\u25E6\s]+/, '• '));
-    }
-  }
-
-  (Object.keys(buffers) as Array<keyof GeminiTasks>).forEach((key) => {
-    if (buffers[key].length) {
-      sections[key] = buffers[key].join('\n');
-    }
-  });
-
-  return sections;
-};
-
 const priorityStyle = (priority: NursingTask['priority']): TextStyle => ({
   color: priority === 'high' ? '#dc2626' : priority === 'medium' ? '#ca8a04' : '#0f172a',
   fontWeight: priority === 'high' ? '600' : '500',
@@ -143,28 +79,8 @@ const trendStyle = (direction: VitalTrend['direction']): TextStyle => ({
   fontWeight: '500',
 });
 
-const NurseTasksScreen = ({ onLogout }: { onLogout: () => void }) => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [geminiTasks, setGeminiTasks] = useState<GeminiTasks>(defaultGeminiTasks);
-
+const NurseTasksScreen = ({ onLogout, patient }: { onLogout: () => void; patient: Patient }) => {
   const taskCount = useMemo(() => currentTasks.length, []);
-
-  const fetchTasks = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const prompt = buildNursePrompt(latestOrders, currentTasks, vitalTrends);
-      const result = await askGemini(prompt);
-      setGeminiTasks(parseTasksResponse(result));
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unable to reach Gemini.';
-      setError(message);
-      setGeminiTasks(defaultGeminiTasks);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -172,22 +88,31 @@ const NurseTasksScreen = ({ onLogout }: { onLogout: () => void }) => {
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.content}
-          refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchTasks} />}
         >
         <View style={styles.header}>
           <Text style={styles.title}>Tasks</Text>
           <Text style={styles.subtitle}>Current tasks: {taskCount}</Text>
         </View>
 
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>AI Task Breakdown</Text>
-          {loading ? <ActivityIndicator size="small" color="#10b981" /> : null}
+        {/* Patient Information */}
+        <View style={styles.patientCard}>
+          <View style={styles.patientHeader}>
+            <Text style={styles.patientName}>{patient.name}</Text>
+            <View style={[
+              styles.priorityBadge,
+              patient.priority === 'high' ? styles.priorityHigh :
+              patient.priority === 'medium' ? styles.priorityMedium :
+              styles.priorityLow
+            ]}>
+              <Text style={styles.priorityText}>{patient.priority.toUpperCase()}</Text>
+            </View>
+          </View>
+          <View style={styles.patientDetails}>
+            <Text style={styles.patientDetail}>🏥 Room {patient.room}</Text>
+            <Text style={styles.patientDetail}>👤 {patient.age} years old</Text>
+            <Text style={styles.patientDetail}>🩺 {patient.condition}</Text>
+          </View>
         </View>
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
-        <Section heading="Actionable tasks" body={geminiTasks.actionableTasks} />
-        <Section heading="Escalation notes" body={geminiTasks.escalationNotes} />
-      </View>
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Doctor Orders</Text>
@@ -229,18 +154,6 @@ const NurseTasksScreen = ({ onLogout }: { onLogout: () => void }) => {
   );
 };
 
-type SectionProps = {
-  heading: string;
-  body: string;
-};
-
-const Section = ({ heading, body }: SectionProps) => (
-  <View style={styles.sectionBlock}>
-    <Text style={styles.sectionHeading}>{heading}</Text>
-    <Text style={styles.sectionBody}>{body}</Text>
-  </View>
-);
-
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -271,6 +184,59 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#0f766e',
   },
+  patientCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
+    borderLeftWidth: 4,
+    borderLeftColor: '#10b981',
+  },
+  patientHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  patientName: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#0f172a',
+    flex: 1,
+  },
+  priorityBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  priorityHigh: {
+    backgroundColor: '#fee2e2',
+  },
+  priorityMedium: {
+    backgroundColor: '#fef3c7',
+  },
+  priorityLow: {
+    backgroundColor: '#dbeafe',
+  },
+  priorityText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#0f172a',
+  },
+  patientDetails: {
+    flexDirection: 'column',
+    gap: 6,
+  },
+  patientDetail: {
+    fontSize: 14,
+    color: '#475569',
+    lineHeight: 20,
+  },
   card: {
     backgroundColor: '#fff',
     borderRadius: 16,
@@ -293,20 +259,6 @@ const styles = StyleSheet.create({
     color: '#0f172a',
     marginBottom: 8,
   },
-  sectionBlock: {
-    marginTop: 12,
-  },
-  sectionHeading: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#0f766e',
-    marginBottom: 4,
-  },
-  sectionBody: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: '#1f2937',
-  },
   listItem: {
     paddingVertical: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
@@ -321,11 +273,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#475569',
     marginTop: 2,
-  },
-  errorText: {
-    color: '#dc2626',
-    marginBottom: 8,
-    fontSize: 14,
   },
 });
 

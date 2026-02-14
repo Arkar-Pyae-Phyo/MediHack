@@ -6,12 +6,15 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 
 // --- Screens: หมวดพนักงาน (Staff) ---
-import DoctorDashboardScreen from './screens/DoctorScreen/DoctorDashboardScreen';
+import DoctorDashboardScreen from './screens/DoctorScreen/DashboardScreen';
 import DoctorHome from './screens/DoctorScreen/Home';
 import Bardoctor from './components/bardoctor';
+import NursePatientSelectScreen from './screens/NursePatientSelectScreen';
 import NurseTasksScreen from './screens/NurseTasksScreen';
+import NurseChecklistScreen from './screens/NurseChecklistScreen';
 import PharmacistReviewScreen from './screens/PharmacistReviewScreen';
 import LoginScreen from './screens/LoginScreen';
+import type { Patient } from './screens/NursePatientSelectScreen';
 
 // --- Screens: หมวดคนไข้ (Patient - ย้ายเข้าโฟลเดอร์แล้ว) ---
 import PatientSummaryScreen from './screens/Patient/PatientSummaryScreen';
@@ -23,8 +26,13 @@ type RootStackParamList = {
   Login: undefined;
   PatientRoot: undefined;
   Doctor: undefined;
-  Nurse: undefined;
+  NurseRoot: undefined;
   Pharmacist: undefined;
+};
+
+type NurseStackParamList = {
+  PatientSelect: undefined;
+  NurseTabs: { patient: Patient };
 };
 
 type PatientTabParamList = {
@@ -33,8 +41,15 @@ type PatientTabParamList = {
   Chat: undefined;
 };
 
+type NurseTabParamList = {
+  Tasks: undefined;
+  Checklist: undefined;
+};
+
 const Stack = createNativeStackNavigator<RootStackParamList>();
-const Tab = createBottomTabNavigator<PatientTabParamList>();
+const NurseStack = createNativeStackNavigator<NurseStackParamList>();
+const PatientTab = createBottomTabNavigator<PatientTabParamList>();
+const NurseTab = createBottomTabNavigator<NurseTabParamList>();
 const DoctorTab = createBottomTabNavigator();
 
 const navigationTheme = {
@@ -45,7 +60,7 @@ const navigationTheme = {
 // --- Navbar ของคนไข้ ---
 const PatientTabs = ({ onLogout }: { onLogout: () => void }) => {
   return (
-    <Tab.Navigator
+    <PatientTab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarActiveTintColor: '#2563eb',
@@ -60,12 +75,58 @@ const PatientTabs = ({ onLogout }: { onLogout: () => void }) => {
         },
       })}
     >
-      <Tab.Screen name="Summary" options={{ title: 'Home' }}>
+      <PatientTab.Screen name="Summary" options={{ title: 'Home' }}>
         {() => <PatientSummaryScreen onLogout={onLogout} />}
-      </Tab.Screen>
-      <Tab.Screen name="Health" component={PatientHealthScreen} options={{ title: 'My Health' }} />
-      <Tab.Screen  name="Chat" component={PatientChatScreen}  options={{ title: 'Ask AI' }} />
-    </Tab.Navigator>
+      </PatientTab.Screen>
+      <PatientTab.Screen name="Health" component={PatientHealthScreen} options={{ title: 'My Health' }} />
+      <PatientTab.Screen  name="Chat" component={PatientChatScreen}  options={{ title: 'Ask AI' }} />
+    </PatientTab.Navigator>
+  );
+};
+
+// --- Navbar ของพยาบาล ---
+const NurseTabs = ({ onLogout, patient }: { onLogout: () => void; patient: Patient }) => {
+  return (
+    <NurseTab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarActiveTintColor: '#10b981',
+        tabBarInactiveTintColor: '#94a3b8',
+        tabBarStyle: { height: 60, paddingBottom: 8 },
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName: keyof typeof Ionicons.glyphMap = 'home';
+          if (route.name === 'Tasks') iconName = focused ? 'list' : 'list-outline';
+          else if (route.name === 'Checklist') iconName = focused ? 'checkbox' : 'checkbox-outline';
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+      })}
+    >
+      <NurseTab.Screen name="Tasks" options={{ title: 'Tasks' }}>
+        {() => <NurseTasksScreen onLogout={onLogout} patient={patient} />}
+      </NurseTab.Screen>
+      <NurseTab.Screen name="Checklist" options={{ title: 'AI Checklist' }}>
+        {() => <NurseChecklistScreen onLogout={onLogout} patient={patient} />}
+      </NurseTab.Screen>
+    </NurseTab.Navigator>
+  );
+};
+
+// --- Navigator สำหรับพยาบาล (เลือกคนไข้ก่อน) ---
+const NurseNavigator = ({ onLogout }: { onLogout: () => void }) => {
+  return (
+    <NurseStack.Navigator screenOptions={{ headerShown: false }}>
+      <NurseStack.Screen name="PatientSelect">
+        {({ navigation }) => (
+          <NursePatientSelectScreen
+            onLogout={onLogout}
+            onSelectPatient={(patient) => navigation.navigate('NurseTabs', { patient })}
+          />
+        )}
+      </NurseStack.Screen>
+      <NurseStack.Screen name="NurseTabs">
+        {({ route }) => <NurseTabs onLogout={onLogout} patient={route.params.patient} />}
+      </NurseStack.Screen>
+    </NurseStack.Navigator>
   );
 };
 
@@ -121,8 +182,8 @@ export default function App() {
               </Stack.Screen>
             )}
             {user.role === 'Nurse' && (
-              <Stack.Screen name="Nurse">
-                {() => <NurseTasksScreen onLogout={handleLogout} />}
+              <Stack.Screen name="NurseRoot">
+                {() => <NurseNavigator onLogout={handleLogout} />}
               </Stack.Screen>
             )}
             {user.role === 'Pharmacist' && (

@@ -214,21 +214,21 @@ const DashboardScreen = ({ onLogout }: { onLogout: () => void }) => {
             <View style={styles.statsBar}>
               <View style={styles.statItem}>
                 <Text style={styles.statNumber}>{mockPatients.length}</Text>
-                <Text style={styles.statLabel}>ผู้ป่วยทั้งหมด</Text>
+                <Text style={styles.statLabel}>Total Patients</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
                 <Text style={[styles.statNumber, { color: '#dc2626' }]}>
                   {criticalPatients.length}
                 </Text>
-                <Text style={styles.statLabel}>ต้องเฝ้าระวัง</Text>
+                <Text style={styles.statLabel}>Critical</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
                 <Text style={[styles.statNumber, { color: '#059669' }]}>
                   {stablePatients.length}
                 </Text>
-                <Text style={styles.statLabel}>สถานะคงที่</Text>
+                <Text style={styles.statLabel}>Stable</Text>
               </View>
             </View>
           </View>
@@ -239,7 +239,7 @@ const DashboardScreen = ({ onLogout }: { onLogout: () => void }) => {
               <Text style={styles.searchIcon}>🔍</Text>
               <TextInput
                 style={styles.searchInput}
-                placeholder="ค้นหาชื่อ, MRN, หรือห้อง..."
+                placeholder="Search name, MRN, or room..."
                 placeholderTextColor="#94a3b8"
                 value={searchQuery}
                 onChangeText={setSearchQuery}
@@ -277,7 +277,7 @@ const DashboardScreen = ({ onLogout }: { onLogout: () => void }) => {
                   <Text style={styles.summaryNumber}>{stablePatients.length}</Text>
                 </View>
               </View>
-              <Text style={styles.summaryLabel}>อาการคงที่</Text>
+              <Text style={styles.summaryLabel}>Stable</Text>
               <Text style={styles.summarySubtext}>Stable Condition</Text>
             </TouchableOpacity>
 
@@ -298,8 +298,8 @@ const DashboardScreen = ({ onLogout }: { onLogout: () => void }) => {
                   <Text style={styles.summaryNumber}>{improvingPatients.length}</Text>
                 </View>
               </View>
-              <Text style={styles.summaryLabel}>ดีขึ้น</Text>
-              <Text style={styles.summarySubtext}>Improving</Text>
+              <Text style={styles.summaryLabel}>Improving</Text>
+              <Text style={styles.summarySubtext}>Getting Better</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -319,8 +319,8 @@ const DashboardScreen = ({ onLogout }: { onLogout: () => void }) => {
                   <Text style={styles.summaryNumber}>{criticalPatients.length}</Text>
                 </View>
               </View>
-              <Text style={styles.summaryLabel}>วิกฤต</Text>
-              <Text style={styles.summarySubtext}>Critical</Text>
+              <Text style={styles.summaryLabel}>Critical</Text>
+              <Text style={styles.summarySubtext}>Needs Attention</Text>
             </TouchableOpacity>
           </View>
 
@@ -330,13 +330,13 @@ const DashboardScreen = ({ onLogout }: { onLogout: () => void }) => {
               <View style={styles.filterTextContainer}>
                 <Text style={styles.filterIcon}>📋</Text>
                 <Text style={styles.filterText}>
-                  {filteredPatients.length} ผู้ป่วย
+                  {filteredPatients.length} {filteredPatients.length === 1 ? 'Patient' : 'Patients'}
                   {selectedGroup !== 'all' && (
                     <>
                       {' • '}
-                      {selectedGroup === 'stable' && 'อาการคงที่'}
-                      {selectedGroup === 'improving' && 'ดีขึ้น'}
-                      {selectedGroup === 'critical' && 'วิกฤต'}
+                      {selectedGroup === 'stable' && 'Stable'}
+                      {selectedGroup === 'improving' && 'Improving'}
+                      {selectedGroup === 'critical' && 'Critical'}
                     </>
                   )}
                   {searchQuery && ` • "${searchQuery}"`}
@@ -349,7 +349,7 @@ const DashboardScreen = ({ onLogout }: { onLogout: () => void }) => {
                   setSearchQuery('');
                 }}
               >
-                <Text style={styles.clearFilterText}>ล้าง</Text>
+                <Text style={styles.clearFilterText}>Clear</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -357,7 +357,7 @@ const DashboardScreen = ({ onLogout }: { onLogout: () => void }) => {
           {/* Patient List */}
           <View style={styles.patientListContainer}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>📋 รายชื่อผู้ป่วย</Text>
+              <Text style={styles.sectionTitle}>📋 Patient List</Text>
               <View style={styles.listBadge}>
                 <Text style={styles.listBadgeText}>{filteredPatients.length}</Text>
               </View>
@@ -370,20 +370,20 @@ const DashboardScreen = ({ onLogout }: { onLogout: () => void }) => {
                 </View>
                 <Text style={styles.emptyTitle}>
                   {searchQuery 
-                    ? 'ไม่พบผู้ป่วยที่ค้นหา' 
-                    : 'ไม่มีข้อมูลผู้ป่วย'}
+                    ? 'No Patients Found' 
+                    : 'No Patient Data'}
                 </Text>
                 <Text style={styles.emptySubtext}>
                   {searchQuery 
-                    ? 'ลองค้นหาด้วยคำอื่นหรือเคลียร์ตัวกรอง' 
-                    : 'ยังไม่มีผู้ป่วยในระบบ'}
+                    ? 'Try another search term or clear filters' 
+                    : 'No patients in the system yet'}
                 </Text>
                 {searchQuery && (
                   <TouchableOpacity 
                     style={styles.emptyButton}
                     onPress={clearSearch}
                   >
-                    <Text style={styles.emptyButtonText}>ล้างการค้นหา</Text>
+                    <Text style={styles.emptyButtonText}>Clear Search</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -423,8 +423,8 @@ const DashboardScreen = ({ onLogout }: { onLogout: () => void }) => {
                           </View>
                           <Text style={styles.metaDivider}>•</Text>
                           <View style={styles.metaItem}>
-                            <Text style={styles.metaLabel}>อายุ:</Text>
-                            <Text style={styles.metaValue}>{patient.age} ปี</Text>
+                            <Text style={styles.metaLabel}>Age:</Text>
+                            <Text style={styles.metaValue}>{patient.age} years</Text>
                           </View>
                           <Text style={styles.metaDivider}>•</Text>
                           <View style={styles.metaItem}>
@@ -446,9 +446,9 @@ const DashboardScreen = ({ onLogout }: { onLogout: () => void }) => {
                           { color: getStatusColor(patient.status) },
                         ]}
                       >
-                        {patient.status === 'stable' && '✓ คงที่'}
-                        {patient.status === 'improving' && '↑ ดีขึ้น'}
-                        {patient.status === 'critical' && '! วิกฤต'}
+                        {patient.status === 'stable' && '✓ Stable'}
+                        {patient.status === 'improving' && '↑ Improving'}
+                        {patient.status === 'critical' && '! Critical'}
                       </Text>
                     </View>
                   </View>
@@ -458,7 +458,7 @@ const DashboardScreen = ({ onLogout }: { onLogout: () => void }) => {
                     <View style={styles.diagnosisContainer}>
                       <Text style={styles.diagnosisIcon}>🩺</Text>
                       <View style={styles.diagnosisContent}>
-                        <Text style={styles.diagnosisLabel}>การวินิจฉัย</Text>
+                        <Text style={styles.diagnosisLabel}>Diagnosis</Text>
                         <Text style={styles.diagnosisText}>{patient.diagnosis}</Text>
                       </View>
                     </View>
@@ -469,11 +469,11 @@ const DashboardScreen = ({ onLogout }: { onLogout: () => void }) => {
                     <View style={styles.updateContainer}>
                       <Text style={styles.clockIcon}>🕐</Text>
                       <Text style={styles.updateText}>
-                        อัพเดท: {patient.lastUpdate}
+                        Updated: {patient.lastUpdate}
                       </Text>
                     </View>
                     <View style={styles.viewButton}>
-                      <Text style={styles.viewButtonText}>ดูรายละเอียด</Text>
+                      <Text style={styles.viewButtonText}>View Details</Text>
                       <Text style={styles.arrowIcon}>›</Text>
                     </View>
                   </View>
