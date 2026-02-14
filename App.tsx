@@ -4,7 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
 
 import PatientSummaryScreen from './screens/PatientSummaryScreen';
-import DoctorDashboardScreen from './screens/DoctorDashboardScreen';
+import DoctorDashboardScreen from './screens/DoctorScreen/DoctorDashboardScreen';
 import NurseTasksScreen from './screens/NurseTasksScreen';
 import PharmacistReviewScreen from './screens/PharmacistReviewScreen';
 import LoginScreen from './screens/LoginScreen';
