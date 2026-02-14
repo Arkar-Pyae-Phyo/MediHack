@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
   Image,
+  Alert,
 } from 'react-native';
 import { 
   Sparkles, 
@@ -28,19 +29,19 @@ import {
   Pill,
   ChevronRight,
   MessageCircle,
-  AlertCircle
 } from 'lucide-react-native';
 
 import { askGemini } from '../../services/gemini';
+import { getPatientInfo } from '../../services/patientService';
 
-// --- Mock Data ---
+// --- Mock Data (ใช้เป็นค่าสำรองกรณีโหลดไม่ติด) ---
 const patientData = {
-  name: 'Avery Thompson',
-  hn: 'HN-482991',
+  name: 'Loading...',
+  hn: 'Wait...',
   doctor: 'Dr. Patel',
-  avatar: 'https://i.pravatar.cc/150?img=9',
+  avatar: 'https://i.pravatar.cc/150?img=11',
   
-  // Timeline การรักษา
+  // Timeline การรักษา (จำลอง)
   journey: [
     { label: 'Admitted', status: 'completed', date: 'Feb 10' },
     { label: 'Surgery', status: 'completed', date: 'Feb 11' },
@@ -48,32 +49,23 @@ const patientData = {
     { label: 'Discharge', status: 'pending', date: 'Feb 17' },
   ],
 
-  // ยา/นัดหมาย
-  upcoming: [
-    { type: 'med', label: 'Metformin', detail: '1000mg with Lunch', time: '12:00 PM', taken: false },
-    { type: 'med', label: 'Lisinopril', detail: '20mg Bedtime', time: '09:00 PM', taken: false },
-    { type: 'appointment', label: 'Dr. Patel Check-up', detail: 'Room 302', time: '02:00 PM', taken: false },
-  ],
-
-  // ค่าชีพจรล่าสุด (Snapshot)
-  vitals: {
-    bp: '128/82',
-    hr: '72 bpm',
-    temp: '36.8°C',
-    spo2: '98%'
-  },
-
-  // Quick stats
+  // Quick stats (จำลอง)
   stats: {
-    medsTaken: 6,
-    medsTotal: 8,
     daysInRecovery: 3,
     nextAppointment: '2 hrs'
+  },
+  
+  // Vitals (จำลอง)
+  vitals: {
+    bp: '-',
+    hr: '-',
+    temp: '-',
+    spo2: '-'
   }
 };
 
 const buildPrompt = (mode: 'patient' | 'family') => `
-  Context: Patient Avery is in recovery stage. Vitals are stable.
+  Context: Patient is in recovery stage. Vitals are stable.
   Mode: ${mode === 'patient' ? 'Talking to Patient' : 'Talking to Family'}.
   Write a SHORT, encouraging dashboard summary (max 25 words).
   Tone: Professional but warm.
@@ -86,6 +78,33 @@ const PatientSummaryScreen = ({ onLogout }: { onLogout: () => void }) => {
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState('');
   const [asking, setAsking] = useState(false);
+  
+  // State สำหรับเก็บข้อมูลจริง
+  const [realData, setRealData] = useState<any>(null); 
+  const [loadingData, setLoadingData] = useState(true);
+
+  // ฟังก์ชันดึงข้อมูลจริง
+  const fetchMyData = async () => {
+    setLoadingData(true);
+    try {
+      console.log("🚀 Fetching data...");
+      // ⚠️ ในอนาคตเปลี่ยน 'AN1' เป็นตัวแปรที่รับมาจากการ Login
+      const data = await getPatientInfo('AN1'); 
+      console.log("📦 Received:", JSON.stringify(data).substring(0, 100) + "...");
+      
+      if (data) {
+        setRealData(data);
+      }
+    } catch (error) {
+      console.log("Fetch Error:", error);
+    } finally {
+      setLoadingData(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMyData();
+  }, []);
 
   const fetchSummary = useCallback(async () => {
     setLoading(true);
@@ -112,10 +131,37 @@ const PatientSummaryScreen = ({ onLogout }: { onLogout: () => void }) => {
     }
   };
 
+  // Helper ดึงค่า Vital Sign (ถ้า API ส่งมา key ชื่อ nurse_notes หรือ vitals)
+  // หมายเหตุ: โค้ดนี้เขียนเผื่อไว้ ถ้า API ยังไม่ส่ง key vitals มา มันจะโชว์ค่าว่าง
+  const getVital = (name: string) => {
+    if (!realData?.vitals) return patientData.vitals[name.toLowerCase()] || '-';
+    // ปรับ logic ตามโครงสร้างจริงที่ PHP ส่งมา
+    return realData.vitals.find((v: any) => v.name === name)?.value || '-';
+  };
+
+  if (loadingData && !realData) {
+      return (
+        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F8FAFC'}}>
+            <ActivityIndicator size="large" color="#2563EB" />
+            <Text style={{marginTop: 10, color: '#64748B'}}>กำลังดึงข้อมูลสุขภาพของคุณ...</Text>
+        </View>
+      );
+  }
+
   const themeColor = mode === 'patient' ? '#2563EB' : '#7C3AED';
   const themeGradient = mode === 'patient' 
     ? ['#3B82F6', '#2563EB'] 
     : ['#8B5CF6', '#7C3AED'];
+
+    const displayedDrugs = realData?.drugs 
+    ? realData.drugs
+        // 1. กรองชื่อซ้ำ (เอาเฉพาะอันล่าสุดของชื่อนั้นๆ)
+        .filter((drug: any, index: number, self: any[]) =>
+          index === self.findIndex((t: any) => t.drug_name === drug.drug_name)
+        )
+        // 2. ตัดให้เหลือแค่ 5 ตัวแรก
+        .slice(0, 5)
+    : [];
 
   return (
     <View style={styles.container}>
@@ -129,7 +175,7 @@ const PatientSummaryScreen = ({ onLogout }: { onLogout: () => void }) => {
         refreshControl={
           <RefreshControl 
             refreshing={loading} 
-            onRefresh={fetchSummary} 
+            onRefresh={() => { fetchSummary(); fetchMyData(); }} 
             tintColor="#FFF" 
           />
         }
@@ -146,9 +192,17 @@ const PatientSummaryScreen = ({ onLogout }: { onLogout: () => void }) => {
               </View>
               <View style={styles.profileInfo}>
                 <Text style={styles.greeting}>Welcome Back 👋</Text>
-                <Text style={styles.name}>{patientData.name}</Text>
+                
+                {/* ชื่อคนไข้ (ถ้า API ไม่ส่งชื่อมา ให้โชว์ AN แทนไปก่อน) */}
+                <Text style={styles.name}>
+                  {realData?.name ? realData.name : (realData?.an ? `Patient ${realData.an}` : patientData.name)}
+                </Text>
+                
                 <View style={styles.metaRow}>
-                  <Text style={styles.subInfo}>{patientData.hn}</Text>
+                  {/* AN Code */}
+                  <Text style={styles.subInfo}>
+                    {realData?.an ? `AN: ${realData.an}` : patientData.hn}
+                  </Text>
                   <View style={styles.dot} />
                   <Text style={styles.subInfo}>{patientData.doctor}</Text>
                 </View>
@@ -208,8 +262,11 @@ const PatientSummaryScreen = ({ onLogout }: { onLogout: () => void }) => {
             <View style={[styles.statIconBox, { backgroundColor: '#DBEAFE' }]}>
               <Pill size={20} color="#2563EB" />
             </View>
-            <Text style={styles.statValue}>{patientData.stats.medsTaken}/{patientData.stats.medsTotal}</Text>
-            <Text style={styles.statLabel}>Meds Taken</Text>
+            {/* นับจำนวนยาจาก realData.drugs */}
+            <Text style={styles.statValue}>
+                {realData?.drugs ? realData.drugs.length : 0}
+            </Text>
+            <Text style={styles.statLabel}>Medicines</Text>
           </View>
 
           <View style={styles.statCard}>
@@ -229,7 +286,7 @@ const PatientSummaryScreen = ({ onLogout }: { onLogout: () => void }) => {
           </View>
         </View>
 
-        {/* 3. AI Insight Card - Enhanced */}
+        {/* 3. AI Insight Card */}
         <View style={[styles.card, styles.aiCard]}>
           <View style={styles.aiHeader}>
             <View style={styles.aiTitleRow}>
@@ -261,7 +318,7 @@ const PatientSummaryScreen = ({ onLogout }: { onLogout: () => void }) => {
           )}
         </View>
 
-        {/* 4. Recovery Journey Timeline - Enhanced */}
+        {/* 4. Timeline */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Recovery Journey</Text>
           <TouchableOpacity style={styles.seeAllButton}>
@@ -279,7 +336,6 @@ const PatientSummaryScreen = ({ onLogout }: { onLogout: () => void }) => {
               
               return (
                 <View key={index} style={styles.timelineItem}>
-                  {/* Vertical Line */}
                   {!isLast && (
                     <View style={styles.verticalLine}>
                       <View style={[
@@ -288,8 +344,6 @@ const PatientSummaryScreen = ({ onLogout }: { onLogout: () => void }) => {
                       ]} />
                     </View>
                   )}
-
-                  {/* Timeline Node */}
                   <View style={styles.timelineNode}>
                     {isDone ? (
                       <View style={[styles.nodeCircle, { backgroundColor: '#10B981' }]}>
@@ -306,8 +360,6 @@ const PatientSummaryScreen = ({ onLogout }: { onLogout: () => void }) => {
                       </View>
                     )}
                   </View>
-
-                  {/* Timeline Content */}
                   <View style={styles.timelineContent}>
                     <View style={styles.timelineTextRow}>
                       <Text style={[
@@ -336,13 +388,13 @@ const PatientSummaryScreen = ({ onLogout }: { onLogout: () => void }) => {
           </View>
         </View>
 
-        {/* 5. Vitals Overview - Compact Grid */}
-        <Text style={styles.sectionTitle}>Vital Signs</Text>
+        {/* 5. Vitals Overview */}
+        <Text style={styles.sectionTitle}>Latest Vital Signs</Text>
         <View style={styles.vitalsGrid}>
           <View style={styles.vitalCardCompact}>
             <Activity size={18} color="#EF4444" />
             <Text style={styles.vitalLabel}>Blood Pressure</Text>
-            <Text style={styles.vitalValueLarge}>{patientData.vitals.bp}</Text>
+            <Text style={styles.vitalValueLarge}>{getVital('BP')}</Text>
             <View style={styles.vitalStatus}>
               <View style={[styles.statusIndicator, { backgroundColor: '#10B981' }]} />
               <Text style={styles.statusText}>Normal</Text>
@@ -352,7 +404,7 @@ const PatientSummaryScreen = ({ onLogout }: { onLogout: () => void }) => {
           <View style={styles.vitalCardCompact}>
             <Heart size={18} color="#F43F5E" />
             <Text style={styles.vitalLabel}>Heart Rate</Text>
-            <Text style={styles.vitalValueLarge}>{patientData.vitals.hr}</Text>
+            <Text style={styles.vitalValueLarge}>{getVital('HR')}</Text>
             <View style={styles.vitalStatus}>
               <View style={[styles.statusIndicator, { backgroundColor: '#10B981' }]} />
               <Text style={styles.statusText}>Excellent</Text>
@@ -362,7 +414,7 @@ const PatientSummaryScreen = ({ onLogout }: { onLogout: () => void }) => {
           <View style={styles.vitalCardCompact}>
             <TrendingUp size={18} color="#3B82F6" />
             <Text style={styles.vitalLabel}>Temperature</Text>
-            <Text style={styles.vitalValueLarge}>{patientData.vitals.temp}</Text>
+            <Text style={styles.vitalValueLarge}>{getVital('Temp')}</Text>
             <View style={styles.vitalStatus}>
               <View style={[styles.statusIndicator, { backgroundColor: '#10B981' }]} />
               <Text style={styles.statusText}>Normal</Text>
@@ -372,7 +424,7 @@ const PatientSummaryScreen = ({ onLogout }: { onLogout: () => void }) => {
           <View style={styles.vitalCardCompact}>
             <Activity size={18} color="#8B5CF6" />
             <Text style={styles.vitalLabel}>SpO2</Text>
-            <Text style={styles.vitalValueLarge}>{patientData.vitals.spo2}</Text>
+            <Text style={styles.vitalValueLarge}>{getVital('SpO2')}</Text>
             <View style={styles.vitalStatus}>
               <View style={[styles.statusIndicator, { backgroundColor: '#10B981' }]} />
               <Text style={styles.statusText}>Good</Text>
@@ -380,7 +432,7 @@ const PatientSummaryScreen = ({ onLogout }: { onLogout: () => void }) => {
           </View>
         </View>
 
-        {/* Emergency Call Button */}
+        {/* Emergency Call */}
         <TouchableOpacity style={[styles.emergencyButton, { backgroundColor: '#EF4444' }]}>
           <Phone size={24} color="#FFF" />
           <View style={{ flex: 1 }}>
@@ -390,42 +442,53 @@ const PatientSummaryScreen = ({ onLogout }: { onLogout: () => void }) => {
           <ChevronRight size={24} color="#FFF" />
         </TouchableOpacity>
 
-        {/* 6. Today's Schedule */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Today's Schedule</Text>
-          <Text style={styles.scheduleCount}>{patientData.upcoming.length} items</Text>
+        {/* 6. Today's Medication (ใช้ข้อมูลจริงจาก realData.drugs) */}
+       <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Medications Plan</Text>
+          <Text style={styles.scheduleCount}>
+            {/* โชว์จำนวนยาที่กรองแล้ว */}
+            {displayedDrugs.length} items
+          </Text>
         </View>
 
-        {patientData.upcoming.map((item, i) => (
-          <View key={i} style={styles.scheduleCard}>
-            <View style={styles.scheduleTime}>
-              <Clock size={16} color={themeColor} />
-              <Text style={[styles.timeText, { color: themeColor }]}>{item.time}</Text>
-            </View>
-            
-            <View style={styles.scheduleContent}>
-              <View style={styles.scheduleHeader}>
-                <Text style={styles.scheduleLabel}>{item.label}</Text>
-                {item.type === 'appointment' && (
-                  <View style={styles.appointmentBadge}>
-                    <Calendar size={12} color="#F59E0B" />
-                  </View>
-                )}
+        {displayedDrugs.length > 0 ? (
+          // วนลูปจากตัวแปรใหม่ displayedDrugs
+          displayedDrugs.map((item: any, i: number) => (
+            <View key={i} style={styles.scheduleCard}>
+              <View style={styles.scheduleTime}>
+                <Clock size={16} color={themeColor} />
+                <Text style={[styles.timeText, { color: themeColor, fontSize: 11 }]}>
+                  {item.usage_text ? item.usage_text.substring(0, 10) + '...' : 'Daily'}
+                </Text>
               </View>
-              <Text style={styles.scheduleDetail}>{item.detail}</Text>
-            </View>
+              
+              <View style={styles.scheduleContent}>
+                <View style={styles.scheduleHeader}>
+                  <Text style={styles.scheduleLabel}>
+                    {/* ตัดชื่อยาให้สั้นลงถ้ามันยาวเกินไป */}
+                    {item.drug_name.length > 25 ? item.drug_name.substring(0, 25) + '...' : item.drug_name}
+                  </Text>
+                  <View style={styles.appointmentBadge}>
+                    <Pill size={12} color="#F59E0B" />
+                  </View>
+                </View>
+                <Text style={styles.scheduleDetail}>
+                  Dose: {item.dose_qty} {item.dose_unit}
+                </Text>
+              </View>
 
-            <TouchableOpacity style={styles.checkButton}>
-              {item.taken ? (
-                <CheckCircle2 size={24} color="#10B981" />
-              ) : (
+              <TouchableOpacity style={styles.checkButton}>
                 <Circle size={24} color="#CBD5E1" />
-              )}
-            </TouchableOpacity>
+              </TouchableOpacity>
+            </View>
+          ))
+        ) : (
+          <View style={{padding: 20, alignItems: 'center'}}>
+            <Text style={{color: '#94A3B8'}}>No medications found.</Text>
           </View>
-        ))}
+        )}
 
-        {/* 7. Ask CareMind AI - Enhanced */}
+        {/* 7. Ask CareMind AI */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Ask CareMind</Text>
           <View style={styles.aiBadge}>
@@ -490,7 +553,6 @@ const PatientSummaryScreen = ({ onLogout }: { onLogout: () => void }) => {
           <Text style={styles.logoutText}>Sign Out</Text>
         </TouchableOpacity>
 
-        {/* Bottom Padding */}
         <View style={{ height: 40 }} />
 
       </ScrollView>
@@ -587,7 +649,7 @@ const styles = StyleSheet.create({
   },
   subInfo: { 
     fontSize: 13, 
-    color: 'rgba(255,255,255,0.85)',
+    color: 'rgba(255,255,255,0.85)', 
     fontWeight: '500',
   },
   dot: {
