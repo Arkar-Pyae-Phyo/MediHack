@@ -6,7 +6,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 
 // --- Screens: หมวดพนักงาน (Staff) ---
-import DoctorDashboardScreen from './screens/DoctorDashboardScreen';
+import DoctorDashboardScreen from './screens/DoctorScreen/DoctorDashboardScreen';
 import NurseTasksScreen from './screens/NurseTasksScreen';
 import PharmacistReviewScreen from './screens/PharmacistReviewScreen';
 import AdminDashboardScreen from './screens/AdminDashboardScreen';
