@@ -9,7 +9,6 @@ import { Ionicons } from '@expo/vector-icons';
 import DoctorDashboardScreen from './screens/DoctorScreen/DoctorDashboardScreen';
 import NurseTasksScreen from './screens/NurseTasksScreen';
 import PharmacistReviewScreen from './screens/PharmacistReviewScreen';
-import AdminDashboardScreen from './screens/AdminDashboardScreen';
 import LoginScreen from './screens/LoginScreen';
 
 // --- Screens: หมวดคนไข้ (Patient - ย้ายเข้าโฟลเดอร์แล้ว) ---
@@ -24,7 +23,6 @@ type RootStackParamList = {
   Doctor: undefined;
   Nurse: undefined;
   Pharmacist: undefined;
-  Admin: undefined;
 };
 
 type PatientTabParamList = {
@@ -105,11 +103,6 @@ export default function App() {
             {user.role === 'Pharmacist' && (
               <Stack.Screen name="Pharmacist">
                 {() => <PharmacistReviewScreen onLogout={handleLogout} />}
-              </Stack.Screen>
-            )}
-            {user.role === 'Admin' && (
-              <Stack.Screen name="Admin">
-                {() => <AdminDashboardScreen onLogout={handleLogout} />}
               </Stack.Screen>
             )}
             {user.role === 'Patient' && (

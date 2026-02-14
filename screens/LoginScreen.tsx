@@ -13,6 +13,7 @@ import {
   Alert,
   LayoutAnimation,
   UIManager,
+  Image,
 } from 'react-native';
 import { 
   User, 
@@ -54,8 +55,6 @@ const LoginScreen = ({ onLogin }: LoginScreenProps) => {
       setDetectedRole({ label: 'Nurse', color: '#059669', icon: Activity });
     } else if (id.startsWith('PHA')) { // เพิ่ม Pharmacist
       setDetectedRole({ label: 'Pharmacist', color: '#7C3AED', icon: Pill });
-    } else if (id.startsWith('ADM')) { // เพิ่ม Admin
-      setDetectedRole({ label: 'Admin', color: '#DC2626', icon: ShieldCheck });
     } else if (id.startsWith('FAM')) { // เพิ่ม Family
       setDetectedRole({ label: 'Family', color: '#EA580C', icon: Users });
     } else if (id.startsWith('PAT')) { // เพิ่ม Patient
@@ -94,9 +93,13 @@ const LoginScreen = ({ onLogin }: LoginScreenProps) => {
           
           <View style={styles.headerContainer}>
             <View style={styles.logoIconContainer}>
-              <Activity size={32} color="#2563EB" />
+              <Image 
+                source={require('../assets/logo.png')} 
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
             </View>
-            <Text style={styles.appName}>Synapse<Text style={styles.appNameHighlight}>.OS</Text></Text>
+            <Text style={styles.appName}>CareMind</Text>
             <Text style={styles.appTagline}>Healthcare Management & Communication</Text>
           </View>
 
@@ -141,7 +144,6 @@ const LoginScreen = ({ onLogin }: LoginScreenProps) => {
                   <Text style={styles.hintText}>• Doctor: <Text style={{fontWeight:'700', color:'#2563EB'}}>DOCxxxx</Text></Text>
                   <Text style={styles.hintText}>• Nurse: <Text style={{fontWeight:'700', color:'#059669'}}>NURxxxx</Text></Text>
                   <Text style={styles.hintText}>• Pharmacist: <Text style={{fontWeight:'700', color:'#7C3AED'}}>PHAxxxx</Text></Text>
-                  <Text style={styles.hintText}>• Admin: <Text style={{fontWeight:'700', color:'#DC2626'}}>ADMxxxx</Text></Text>
                   <Text style={styles.hintText}>• Family: <Text style={{fontWeight:'700', color:'#EA580C'}}>FAMxxxx</Text></Text>
                   <Text style={styles.hintText}>• Patient: <Text style={{fontWeight:'700', color:'#EA580C'}}>PATxxxx</Text></Text>
                 </View>
@@ -231,13 +233,23 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   logoIconContainer: {
-    width: 64,
-    height: 64,
-    backgroundColor: '#DBEAFE',
-    borderRadius: 16,
+    width: 110,
+    height: 110,
+    borderRadius: 55,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: 24,
+    backgroundColor: '#FFFFFF',
+    overflow: 'hidden',
+    shadowColor: '#2563EB',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  logoImage: {
+    width: '100%',
+    height: '100%',
   },
   appName: {
     fontSize: 28,
