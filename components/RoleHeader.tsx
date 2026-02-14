@@ -1,4 +1,5 @@
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { LogOut } from 'lucide-react-native';
 
 type RoleHeaderProps = {
   role: string;
@@ -8,9 +9,18 @@ type RoleHeaderProps = {
 const RoleHeader = ({ role, onLogout }: RoleHeaderProps) => {
   return (
     <View style={styles.headerBar}>
-      <Text style={styles.roleText}>{role}</Text>
-      <TouchableOpacity style={styles.backButton} onPress={onLogout}>
-        <Text style={styles.backButtonText}>← Back to Login</Text>
+      <View style={styles.roleContainer}>
+        <View style={styles.roleBadge}>
+          <Text style={styles.roleText}>{role}</Text>
+        </View>
+      </View>
+      <TouchableOpacity 
+        style={styles.backButton} 
+        onPress={onLogout}
+        activeOpacity={0.8}
+      >
+        <LogOut size={16} color="#ef4444" strokeWidth={2.5} />
+        <Text style={styles.backButtonText}>Logout</Text>
       </TouchableOpacity>
     </View>
   );
@@ -21,34 +31,56 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#fff',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: '#ffffff',
     borderTopWidth: 1,
-    borderTopColor: '#e2e8f0',
-    shadowColor: '#0f172a',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    borderTopColor: '#e5e7eb',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 8,
+  },
+  roleContainer: {
+    flex: 1,
+  },
+  roleBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: '#f0f9ff',
+    borderWidth: 1.5,
+    borderColor: '#bfdbfe',
   },
   roleText: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
-    color: '#1e293b',
+    color: '#1e40af',
+    letterSpacing: 0.3,
   },
   backButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: '#f1f5f9',
-    borderWidth: 1,
-    borderColor: '#cbd5e1',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: '#fef2f2',
+    borderWidth: 1.5,
+    borderColor: '#fecaca',
+    shadowColor: '#ef4444',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
   backButtonText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#475569',
+    fontWeight: '700',
+    color: '#dc2626',
+    letterSpacing: 0.2,
   },
 });
 
