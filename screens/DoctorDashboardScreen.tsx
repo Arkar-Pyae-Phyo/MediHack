@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   RefreshControl,
+  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -194,17 +195,14 @@ const DoctorDashboardScreen = ({ onLogout }: { onLogout: () => void }) => {
     }
   }, []);
 
-  useEffect(() => {
-    fetchSummary();
-  }, [fetchSummary]);
-
   return (
-    <View style={styles.container}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.content}
-        refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchSummary} />}
-      >
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.content}
+          refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchSummary} />}
+        >
         <View style={styles.header}>
           <Text style={styles.title}>Dashboard</Text>
           <Text style={styles.subtitle}>{patientHeader}</Text>
@@ -271,7 +269,8 @@ const DoctorDashboardScreen = ({ onLogout }: { onLogout: () => void }) => {
       </View>
       </ScrollView>
       <RoleHeader role="Doctor" onLogout={onLogout} />
-    </View>
+      </View>
+    </SafeAreaView>
   );
 };
 
@@ -288,6 +287,10 @@ const SectionBlock = ({ heading, body }: SectionBlockProps) => (
 );
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+  },
   container: {
     flex: 1,
     backgroundColor: '#f8fafc',
@@ -297,6 +300,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
+    paddingTop: 24,
     paddingBottom: 32,
   },
   header: {

@@ -116,7 +116,7 @@ const LoginScreen = ({ onLogin }: LoginScreenProps) => {
 
             {/* Toggle Button */}
             {!detectedRole && (
-              <TouchableOpacity style={styles.helpToggle} onPress={toggleHint}>
+              <TouchableOpacity style={styles.helpToggle} onPress={toggleHint} activeOpacity={1}>
                 <Info size={14} color="#2563EB" style={{ marginRight: 4 }} />
                 <Text style={styles.helpToggleText}>
                   {showHint ? "Hide ID formats" : "How do I format my ID?"}

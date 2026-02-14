@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   RefreshControl,
+  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -171,10 +172,6 @@ const PatientSummaryScreen = ({ onLogout }: { onLogout: () => void }) => {
     }
   }, [parseSummary]);
 
-  useEffect(() => {
-    fetchSummary();
-  }, [fetchSummary]);
-
   const handleAskQuestion = useCallback(async () => {
     const trimmed = question.trim();
     if (!trimmed || answerLoading) {
@@ -198,12 +195,13 @@ const PatientSummaryScreen = ({ onLogout }: { onLogout: () => void }) => {
   }, [answerLoading, question]);
 
   return (
-    <View style={styles.container}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.content}
-        refreshControl={<RefreshControl refreshing={summaryLoading} onRefresh={fetchSummary} />}
-      >
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.content}
+          refreshControl={<RefreshControl refreshing={summaryLoading} onRefresh={fetchSummary} />}
+        >
         <View style={styles.header}>
           <Text style={styles.title}>Your Health Summary</Text>
           <Text style={styles.subtitle}>
@@ -302,11 +300,16 @@ const PatientSummaryScreen = ({ onLogout }: { onLogout: () => void }) => {
       </View>
       </ScrollView>
       <RoleHeader role="Patient" onLogout={onLogout} />
-    </View>
+      </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#f1f5f9',
+  },
   container: {
     flex: 1,
     backgroundColor: '#f1f5f9',
@@ -316,6 +319,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
+    paddingTop: 24,
     paddingBottom: 32,
   },
   header: {
