@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   RefreshControl,
@@ -32,6 +32,11 @@ import {
 } from 'lucide-react-native';
 
 import { askGemini } from '../../services/gemini';
+
+import doctorNotes from '../../sample_data/doc_clean.json';
+import medications from '../../sample_data/drug_clean.json';
+import nurseEntries from '../../sample_data/nurse_clean.json';
+import labResults from '../../sample_data/lab_clean.json';
 
 // --- Mock Data ---
 const patientData = {
@@ -72,6 +77,86 @@ const patientData = {
   }
 };
 
+type DoctorNote = (typeof doctorNotes)[number];
+type MedicationOrder = (typeof medications)[number];
+type NurseEntry = (typeof nurseEntries)[number];
+type LabResult = (typeof labResults)[number];
+
+type CaregiverTask = {
+  task: string;
+  reason?: string;
+};
+
+const ACTIVE_PATIENT_ID = 'an1';
+
+const DEFAULT_CARE_TASKS: CaregiverTask[] = [
+  {
+    task: 'Remind patient to do breathing exercises twice per shift',
+    reason: 'Keeps lungs expanded and helps clear mucus to prevent pneumonia flare-ups.',
+  },
+  {
+    task: 'Bring the home medication list for reconciliation',
+    reason: 'Ensures the care team confirms which medicines continue after discharge.',
+  },
+  {
+    task: 'Ask the team to review discharge criteria with the family',
+    reason: 'Helps everyone prepare transportation, supplies, and follow-up visits in advance.',
+  },
+];
+
+const formatShortDate = (input: string | undefined) => {
+  if (!input) return '';
+  const date = new Date(input);
+  if (Number.isNaN(date.getTime())) return input;
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+};
+
+const extractJsonBlock = (text: string): string | null => {
+  if (!text) return null;
+  const objectMatch = text.match(/\{[\s\S]*\}/);
+  if (objectMatch) return objectMatch[0];
+  const arrayMatch = text.match(/\[[\s\S]*\]/);
+  return arrayMatch ? arrayMatch[0] : null;
+};
+
+const parseCaregiverTasks = (payload: string): CaregiverTask[] => {
+  const jsonBlock = extractJsonBlock(payload.trim());
+  if (!jsonBlock) return [];
+
+  try {
+    const parsed = JSON.parse(jsonBlock);
+    const taskArray = Array.isArray(parsed)
+      ? parsed
+      : Array.isArray(parsed.tasks)
+        ? parsed.tasks
+        : [];
+
+    return taskArray
+      .map((entry: unknown) => {
+        if (typeof entry === 'string') {
+          return { task: entry };
+        }
+        if (entry && typeof entry === 'object' && 'task' in entry) {
+          const taskText = typeof (entry as { task: unknown }).task === 'string' ? (entry as { task: string }).task : '';
+          const reasonText =
+            entry && typeof (entry as { reason?: unknown }).reason === 'string'
+              ? (entry as { reason: string }).reason
+              : undefined;
+          return taskText ? { task: taskText, reason: reasonText } : null;
+        }
+        return null;
+      })
+      .filter((entry): entry is CaregiverTask => Boolean(entry && entry.task?.trim()))
+      .map((entry) => ({
+        task: entry.task.trim(),
+        reason: entry.reason?.trim(),
+      }));
+  } catch (error) {
+    console.warn('Unable to parse caregiver checklist', error);
+    return [];
+  }
+};
+
 const buildPrompt = (mode: 'patient' | 'family') => `
   Context: Patient Avery is in recovery stage. Vitals are stable.
   Mode: ${mode === 'patient' ? 'Talking to Patient' : 'Talking to Family'}.
@@ -86,6 +171,87 @@ const PatientSummaryScreen = ({ onLogout }: { onLogout: () => void }) => {
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState('');
   const [asking, setAsking] = useState(false);
+  const [careChecklist, setCareChecklist] = useState<CaregiverTask[]>(DEFAULT_CARE_TASKS);
+  const [careLoading, setCareLoading] = useState(false);
+  const [careError, setCareError] = useState<string | null>(null);
+
+  const patientDoctorNotes = useMemo<DoctorNote[]>(() => {
+    return doctorNotes
+      .filter((note) => note.patientId === ACTIVE_PATIENT_ID)
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  }, []);
+
+  const patientMedications = useMemo<MedicationOrder[]>(() => {
+    return medications
+      .filter((order) => order.patientId === ACTIVE_PATIENT_ID)
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  }, []);
+
+  const patientNurseEntries = useMemo<NurseEntry[]>(() => {
+    return nurseEntries
+      .filter((entry) => entry.patientId === ACTIVE_PATIENT_ID)
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  }, []);
+
+  const patientLabs = useMemo<LabResult[]>(() => {
+    return labResults
+      .filter((lab) => lab.patientId === ACTIVE_PATIENT_ID)
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  }, []);
+
+  const planDigest = useMemo(() => {
+    if (!patientDoctorNotes.length) return '';
+    return patientDoctorNotes
+      .slice(0, 3)
+      .map((note) => `• ${formatShortDate(note.timestamp)} plan: ${note.plan}`)
+      .join('\n');
+  }, [patientDoctorNotes]);
+
+  const medicationDigest = useMemo(() => {
+    if (!patientMedications.length) return '';
+    return patientMedications
+      .slice(0, 4)
+      .map(
+        (med) =>
+          `${med.medicationName} ${med.dosage} ${med.frequency} (${med.instructions || 'standard instructions'})`,
+      )
+      .join('; ');
+  }, [patientMedications]);
+
+  const nurseDigest = useMemo(() => {
+    if (!patientNurseEntries.length) return '';
+    return patientNurseEntries
+      .slice(0, 2)
+      .map((entry) => `${formatShortDate(entry.timestamp)}: ${entry.notes || entry.taskType}`)
+      .join(' | ');
+  }, [patientNurseEntries]);
+
+  const latestVitalsSnapshot = useMemo(() => {
+    const vitalsEntry = patientNurseEntries.find((entry) => entry.vitalSigns);
+    if (vitalsEntry?.vitalSigns) {
+      const vitals = vitalsEntry.vitalSigns;
+      return `Temp ${vitals.temperature}${vitals.temperatureUnit ?? '°F'}, BP ${vitals.bloodPressure}, O2 ${vitals.oxygenSaturation}%, HR ${vitals.heartRate}`;
+    }
+    return `Temp ${patientData.vitals.temp}, BP ${patientData.vitals.bp}, O2 ${patientData.vitals.spo2}`;
+  }, [patientNurseEntries]);
+
+  const labDigest = useMemo(() => {
+    if (!patientLabs.length) return '';
+    return patientLabs
+      .slice(0, 2)
+      .map((lab) => {
+        const abnormal = lab.results
+          ? Object.entries(lab.results)
+              .filter(([, result]) => result.flag && result.flag !== 'Normal')
+              .map(([name, result]) => `${name} ${result.value}${result.unit ? ` ${result.unit}` : ''} (${result.flag})`)
+          : [];
+        const summary = abnormal.length ? abnormal.join(', ') : 'All values within range';
+        return `${lab.testName} on ${formatShortDate(lab.timestamp)}: ${summary}`;
+      })
+      .join('\n');
+  }, [patientLabs]);
+
+  const primaryDiagnosis = patientDoctorNotes[0]?.diagnosis || 'post-acute recovery';
 
   const fetchSummary = useCallback(async () => {
     setLoading(true);
@@ -111,6 +277,66 @@ const PatientSummaryScreen = ({ onLogout }: { onLogout: () => void }) => {
       setAsking(false);
     }
   };
+
+  const fetchCaregiverChecklist = useCallback(async () => {
+    if (mode !== 'family') return;
+
+    setCareLoading(true);
+    setCareError(null);
+
+    try {
+      if (!patientDoctorNotes.length) {
+        setCareChecklist(DEFAULT_CARE_TASKS);
+        setCareError('Waiting for the care team to document a plan. Showing starter tasks.');
+        return;
+      }
+
+      const contextSections = [
+        `Patient: ${patientData.name} recovering from ${primaryDiagnosis}.`,
+        planDigest ? `Doctor plans:\n${planDigest}` : '',
+        medicationDigest ? `Medications:\n${medicationDigest}` : '',
+        nurseDigest ? `Nursing notes:\n${nurseDigest}` : '',
+        `Latest vitals: ${latestVitalsSnapshot}.`,
+        labDigest ? `Labs:\n${labDigest}` : '',
+      ].filter(Boolean);
+
+      const prompt = `You are an AI nurse helping a hospital caregiver. Convert the context into at most 5 checklist items for family supporters.\n` +
+        `Each item must include a short "task" (<=18 words) plus a "reason".\n` +
+        `Respond ONLY with JSON of the form {"tasks":[{"task":"...","reason":"..."}]}.\n` +
+        `Context:\n${contextSections.join('\n\n')}`;
+
+      const response = await askGemini(prompt);
+      const parsedTasks = parseCaregiverTasks(response);
+
+      if (parsedTasks.length) {
+        setCareChecklist(parsedTasks);
+      } else {
+        setCareChecklist(DEFAULT_CARE_TASKS);
+        setCareError('AI returned an empty checklist. Showing template reminders.');
+      }
+    } catch (error) {
+      console.error('Caregiver checklist error', error);
+      setCareChecklist(DEFAULT_CARE_TASKS);
+      setCareError('Unable to refresh smart tasks right now.');
+    } finally {
+      setCareLoading(false);
+    }
+  }, [
+    mode,
+    planDigest,
+    medicationDigest,
+    nurseDigest,
+    labDigest,
+    latestVitalsSnapshot,
+    primaryDiagnosis,
+    patientDoctorNotes.length,
+  ]);
+
+  useEffect(() => {
+    if (mode === 'family') {
+      fetchCaregiverChecklist();
+    }
+  }, [mode, fetchCaregiverChecklist]);
 
   const themeColor = mode === 'patient' ? '#2563EB' : '#7C3AED';
   const themeGradient = mode === 'patient' 
@@ -260,6 +486,60 @@ const PatientSummaryScreen = ({ onLogout }: { onLogout: () => void }) => {
             </Text>
           )}
         </View>
+
+        {mode === 'family' && (
+          <View style={[styles.card, styles.caregiverCard]}>
+            <View style={styles.caregiverHeader}>
+              <View style={styles.caregiverTitleRow}>
+                <View style={styles.caregiverIconBox}>
+                  <AlertCircle size={20} color="#7C3AED" />
+                </View>
+                <View>
+                  <Text style={styles.caregiverTitle}>Caregiver Checklist</Text>
+                  <Text style={styles.caregiverSubtitle}>Smart tasks from today&apos;s care plan</Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                onPress={fetchCaregiverChecklist}
+                style={styles.refreshButton}
+                disabled={careLoading}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.refreshText, careLoading && styles.refreshTextDisabled]}>
+                  {careLoading ? 'Refreshing…' : 'Refresh'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {careError ? (
+              <View style={styles.caregiverBanner}>
+                <AlertCircle size={16} color="#b45309" />
+                <Text style={styles.caregiverBannerText}>{careError}</Text>
+              </View>
+            ) : null}
+
+            {careLoading ? (
+              <View style={styles.caregiverLoadingRow}>
+                <ActivityIndicator size="small" color="#7C3AED" />
+                <Text style={styles.caregiverLoadingText}>Drafting caregiver tasks…</Text>
+              </View>
+            ) : (
+              <View style={styles.caregiverList}>
+                {careChecklist.map((item, index) => (
+                  <View key={`${item.task}-${index}`} style={styles.caregiverItem}>
+                    <View style={styles.caregiverBullet} />
+                    <View style={styles.caregiverTextBlock}>
+                      <Text style={styles.caregiverTaskText}>{item.task}</Text>
+                      {item.reason ? (
+                        <Text style={styles.caregiverReasonText}>{item.reason}</Text>
+                      ) : null}
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+        )}
 
         {/* 4. Recovery Journey Timeline - Enhanced */}
         <View style={styles.sectionHeader}>
@@ -757,6 +1037,110 @@ const styles = StyleSheet.create({
     color: '#334155',
     lineHeight: 24,
     fontWeight: '500',
+  },
+  caregiverCard: {
+    borderWidth: 1,
+    borderColor: '#EDE9FE',
+    backgroundColor: '#FAF5FF',
+  },
+  caregiverHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  caregiverTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  caregiverIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#F3E8FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  caregiverTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#4C1D95',
+  },
+  caregiverSubtitle: {
+    fontSize: 12,
+    color: '#7C3AED',
+    fontWeight: '600',
+  },
+  refreshButton: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: '#EDE9FE',
+  },
+  refreshText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#7C3AED',
+    letterSpacing: 0.2,
+  },
+  refreshTextDisabled: {
+    opacity: 0.6,
+  },
+  caregiverBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#FFF7ED',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#FED7AA',
+    marginBottom: 12,
+  },
+  caregiverBannerText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#B45309',
+  },
+  caregiverLoadingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  caregiverLoadingText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#7C3AED',
+  },
+  caregiverList: {
+    gap: 12,
+  },
+  caregiverItem: {
+    flexDirection: 'row',
+    gap: 12,
+    alignItems: 'flex-start',
+  },
+  caregiverBullet: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#7C3AED',
+    marginTop: 8,
+  },
+  caregiverTextBlock: {
+    flex: 1,
+  },
+  caregiverTaskText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 4,
+  },
+  caregiverReasonText: {
+    fontSize: 13,
+    color: '#6B7280',
+    lineHeight: 18,
   },
 
   // Section Header

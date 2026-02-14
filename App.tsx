@@ -8,11 +8,12 @@ import { Ionicons } from '@expo/vector-icons';
 // --- Screens: หมวดพนักงาน (Staff) ---
 import DoctorDashboardScreen from './screens/DoctorScreen/DashboardScreen';
 import DoctorHome from './screens/DoctorScreen/Home';
+import PatientDetailScreen from './screens/DoctorScreen/PatientDetailScreen';
 import Bardoctor from './components/bardoctor';
 import NursePatientSelectScreen from './screens/NursePatientSelectScreen';
 import NurseTasksScreen from './screens/NurseTasksScreen';
-import NurseChecklistScreen from './screens/NurseChecklistScreen';
 import PharmacistReviewScreen from './screens/PharmacistReviewScreen';
+import PharmacistPatientSelectScreen, { PharmacistPatient } from './screens/PharmacistPatientSelectScreen';
 import LoginScreen from './screens/LoginScreen';
 import type { Patient } from './screens/NursePatientSelectScreen';
 
@@ -32,7 +33,12 @@ type RootStackParamList = {
 
 type NurseStackParamList = {
   PatientSelect: undefined;
-  NurseTabs: { patient: Patient };
+  NurseTasks: { patient: Patient };
+};
+
+type PharmacistStackParamList = {
+  PatientSelect: undefined;
+  Review: { patient: PharmacistPatient };
 };
 
 type PatientTabParamList = {
@@ -41,15 +47,16 @@ type PatientTabParamList = {
   Chat: undefined;
 };
 
-type NurseTabParamList = {
-  Tasks: undefined;
-  Checklist: undefined;
+type DoctorStackParamList = {
+  DoctorTabs: undefined;
+  PatientDetail: { patient: any };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+const DoctorStack = createNativeStackNavigator<DoctorStackParamList>();
 const NurseStack = createNativeStackNavigator<NurseStackParamList>();
+const PharmacistStack = createNativeStackNavigator<PharmacistStackParamList>();
 const PatientTab = createBottomTabNavigator<PatientTabParamList>();
-const NurseTab = createBottomTabNavigator<NurseTabParamList>();
 const DoctorTab = createBottomTabNavigator();
 
 const navigationTheme = {
@@ -84,33 +91,6 @@ const PatientTabs = ({ onLogout }: { onLogout: () => void }) => {
   );
 };
 
-// --- Navbar ของพยาบาล ---
-const NurseTabs = ({ onLogout, patient }: { onLogout: () => void; patient: Patient }) => {
-  return (
-    <NurseTab.Navigator
-      screenOptions={({ route }) => ({
-        headerShown: false,
-        tabBarActiveTintColor: '#10b981',
-        tabBarInactiveTintColor: '#94a3b8',
-        tabBarStyle: { height: 60, paddingBottom: 8 },
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName: keyof typeof Ionicons.glyphMap = 'home';
-          if (route.name === 'Tasks') iconName = focused ? 'list' : 'list-outline';
-          else if (route.name === 'Checklist') iconName = focused ? 'checkbox' : 'checkbox-outline';
-          return <Ionicons name={iconName} size={size} color={color} />;
-        },
-      })}
-    >
-      <NurseTab.Screen name="Tasks" options={{ title: 'Tasks' }}>
-        {() => <NurseTasksScreen onLogout={onLogout} patient={patient} />}
-      </NurseTab.Screen>
-      <NurseTab.Screen name="Checklist" options={{ title: 'AI Checklist' }}>
-        {() => <NurseChecklistScreen onLogout={onLogout} patient={patient} />}
-      </NurseTab.Screen>
-    </NurseTab.Navigator>
-  );
-};
-
 // --- Navigator สำหรับพยาบาล (เลือกคนไข้ก่อน) ---
 const NurseNavigator = ({ onLogout }: { onLogout: () => void }) => {
   return (
@@ -119,14 +99,75 @@ const NurseNavigator = ({ onLogout }: { onLogout: () => void }) => {
         {({ navigation }) => (
           <NursePatientSelectScreen
             onLogout={onLogout}
-            onSelectPatient={(patient) => navigation.navigate('NurseTabs', { patient })}
+            onSelectPatient={(patient) => navigation.navigate('NurseTasks', { patient })}
           />
         )}
       </NurseStack.Screen>
-      <NurseStack.Screen name="NurseTabs">
-        {({ route }) => <NurseTabs onLogout={onLogout} patient={route.params.patient} />}
+      <NurseStack.Screen name="NurseTasks">
+        {({ route }) => <NurseTasksScreen onLogout={onLogout} patient={route.params.patient} />}
       </NurseStack.Screen>
     </NurseStack.Navigator>
+  );
+};
+
+const PharmacistNavigator = ({ onLogout }: { onLogout: () => void }) => (
+  <PharmacistStack.Navigator screenOptions={{ headerShown: false }}>
+    <PharmacistStack.Screen name="PatientSelect">
+      {({ navigation }) => (
+        <PharmacistPatientSelectScreen
+          onLogout={onLogout}
+          onSelectPatient={(patient) => navigation.navigate('Review', { patient })}
+        />
+      )}
+    </PharmacistStack.Screen>
+    <PharmacistStack.Screen name="Review">
+      {({ route }) => (
+        <PharmacistReviewScreen onLogout={onLogout} patient={route.params.patient} />
+      )}
+    </PharmacistStack.Screen>
+  </PharmacistStack.Navigator>
+);
+
+// --- Navigator สำหรับหมอ (Home + Dashboard + Patient Detail) ---
+const DoctorNavigator = ({ onLogout }: { onLogout: () => void }) => {
+  return (
+    <DoctorStack.Navigator screenOptions={{ headerShown: false }}>
+      <DoctorStack.Screen name="DoctorTabs">
+        {({ navigation }) => (
+          <DoctorTab.Navigator
+            screenOptions={{ headerShown: false }}
+            tabBar={(props) => {
+              const routeName = props.state.routes[props.state.index].name;
+              const activeTab = routeName === 'Home' ? 'home' : 'dashboard';
+              const onNavigate = (tab: 'home' | 'dashboard') => {
+                const target = tab === 'home' ? 'Home' : 'Dashboard';
+                props.navigation.navigate(target as never);
+              };
+              return (
+                <Bardoctor
+                  activeTab={activeTab}
+                  onNavigate={onNavigate}
+                  onLogout={onLogout}
+                />
+              );
+            }}
+          >
+            <DoctorTab.Screen name="Home">{() => <DoctorHome onLogout={onLogout} />}</DoctorTab.Screen>
+            <DoctorTab.Screen name="Dashboard">
+              {() => <DoctorDashboardScreen onLogout={onLogout} onPatientPress={(patient) => navigation.navigate('PatientDetail', { patient })} />}
+            </DoctorTab.Screen>
+          </DoctorTab.Navigator>
+        )}
+      </DoctorStack.Screen>
+      <DoctorStack.Screen name="PatientDetail">
+        {({ route, navigation }) => (
+          <PatientDetailScreen
+            patient={route.params.patient}
+            onBack={() => navigation.goBack()}
+          />
+        )}
+      </DoctorStack.Screen>
+    </DoctorStack.Navigator>
   );
 };
 
@@ -156,29 +197,7 @@ export default function App() {
           <>
             {user.role === 'Doctor' && (
               <Stack.Screen name="Doctor">
-                {() => (
-                  <DoctorTab.Navigator
-                    screenOptions={{ headerShown: false }}
-                    tabBar={(props) => {
-                      const routeName = props.state.routes[props.state.index].name;
-                      const activeTab = routeName === 'Home' ? 'home' : 'dashboard';
-                      const onNavigate = (tab: 'home' | 'dashboard') => {
-                        const target = tab === 'home' ? 'Home' : 'Dashboard';
-                        props.navigation.navigate(target as never);
-                      };
-                      return (
-                        <Bardoctor
-                          activeTab={activeTab}
-                          onNavigate={onNavigate}
-                          onLogout={handleLogout}
-                        />
-                      );
-                    }}
-                  >
-                    <DoctorTab.Screen name="Home">{() => <DoctorHome onLogout={handleLogout} />}</DoctorTab.Screen>
-                    <DoctorTab.Screen name="Dashboard">{() => <DoctorDashboardScreen onLogout={handleLogout} />}</DoctorTab.Screen>
-                  </DoctorTab.Navigator>
-                )}
+                {() => <DoctorNavigator onLogout={handleLogout} />}
               </Stack.Screen>
             )}
             {user.role === 'Nurse' && (
@@ -188,7 +207,7 @@ export default function App() {
             )}
             {user.role === 'Pharmacist' && (
               <Stack.Screen name="Pharmacist">
-                {() => <PharmacistReviewScreen onLogout={handleLogout} />}
+                {() => <PharmacistNavigator onLogout={handleLogout} />}
               </Stack.Screen>
             )}
             {user.role === 'Patient' && (

@@ -1,14 +1,18 @@
-import { useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  ActivityIndicator,
+  RefreshControl,
   SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import type { TextStyle } from 'react-native';
 
 import RoleHeader from '../components/RoleHeader';
+import { askGemini } from '../services/gemini';
 
 type Patient = {
   id: string;
@@ -37,6 +41,13 @@ type VitalTrend = {
   change: string;
   direction: 'up' | 'down' | 'flat';
   timestamp: string;
+};
+
+type ChecklistItem = {
+  id: string;
+  task: string;
+  timeframe: string;
+  completed: boolean;
 };
 
 const currentTasks: NursingTask[] = [
@@ -69,6 +80,36 @@ const vitalTrends: VitalTrend[] = [
   { metric: 'Weight', change: '178 lbs → 177 lbs', direction: 'down', timestamp: 'Last 7d' },
 ];
 
+const buildChecklistPrompt = (orders: DoctorOrder[]) => {
+  return [
+    'You are extracting time-sensitive nursing tasks from doctor orders.',
+    'Extract specific actionable tasks with a timeframe in the format TASK | TIMEFRAME.',
+    'Keep each line concise and grounded only in the provided orders.',
+    `Doctor Orders: ${JSON.stringify(orders)}`,
+  ].join('\n');
+};
+
+const parseChecklist = (text: string): ChecklistItem[] => {
+  if (!text) return [];
+
+  const lines = text.split(/\n+/g).map((line) => line.trim()).filter(Boolean);
+  return lines
+    .map((line, index) => {
+      const cleanLine = line.replace(/^[\-\u2022\u25CF\u25E6\s]+/, '');
+      const parts = cleanLine.split('|').map((part) => part.trim());
+      if (parts.length >= 2) {
+        return {
+          id: `checklist-${Date.now()}-${index}`,
+          task: parts[0],
+          timeframe: parts[1],
+          completed: false,
+        };
+      }
+      return null;
+    })
+    .filter((item): item is ChecklistItem => item !== null);
+};
+
 const priorityStyle = (priority: NursingTask['priority']): TextStyle => ({
   color: priority === 'high' ? '#dc2626' : priority === 'medium' ? '#ca8a04' : '#0f172a',
   fontWeight: priority === 'high' ? '600' : '500',
@@ -81,6 +122,42 @@ const trendStyle = (direction: VitalTrend['direction']): TextStyle => ({
 
 const NurseTasksScreen = ({ onLogout, patient }: { onLogout: () => void; patient: Patient }) => {
   const taskCount = useMemo(() => currentTasks.length, []);
+  const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
+  const [checklistLoading, setChecklistLoading] = useState(false);
+  const [checklistError, setChecklistError] = useState<string | null>(null);
+
+  const toggleChecklistItem = useCallback((id: string) => {
+    setChecklist((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, completed: !item.completed } : item))
+    );
+  }, []);
+
+  const fetchChecklist = useCallback(async () => {
+    setChecklistLoading(true);
+    setChecklistError(null);
+    try {
+      const prompt = buildChecklistPrompt(latestOrders);
+      const response = await askGemini(prompt);
+      const items = parseChecklist(response);
+      setChecklist(items);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unable to reach Gemini.';
+      setChecklistError(message);
+      setChecklist([]);
+    } finally {
+      setChecklistLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchChecklist();
+  }, [fetchChecklist]);
+
+  const completedCount = checklist.filter((item) => item.completed).length;
+  const totalCount = checklist.length;
+  const checklistSubtitle = totalCount
+    ? `${completedCount} of ${totalCount} completed`
+    : 'Auto-generated from doctor orders';
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -88,6 +165,9 @@ const NurseTasksScreen = ({ onLogout, patient }: { onLogout: () => void; patient
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.content}
+          refreshControl={
+            <RefreshControl refreshing={checklistLoading} onRefresh={fetchChecklist} tintColor="#10b981" />
+          }
         >
         <View style={styles.header}>
           <Text style={styles.title}>Tasks</Text>
@@ -113,6 +193,74 @@ const NurseTasksScreen = ({ onLogout, patient }: { onLogout: () => void; patient
             <Text style={styles.patientDetail}>🩺 {patient.condition}</Text>
           </View>
         </View>
+
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <View>
+            <Text style={styles.cardTitle}>🤖 AI Checklist</Text>
+            <Text style={styles.cardSubtitle}>{checklistSubtitle}</Text>
+          </View>
+          <TouchableOpacity
+            style={[styles.refreshChip, checklistLoading && styles.refreshChipDisabled]}
+            onPress={fetchChecklist}
+            disabled={checklistLoading}
+          >
+            <Text style={styles.refreshChipText}>{checklistLoading ? 'Loading...' : 'Refresh'}</Text>
+          </TouchableOpacity>
+        </View>
+
+        {checklistError ? (
+          <View style={styles.errorBanner}>
+            <Text style={styles.errorText}>{checklistError}</Text>
+            <TouchableOpacity style={styles.retryButton} onPress={fetchChecklist}>
+              <Text style={styles.retryButtonText}>Try again</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
+        {checklistLoading && totalCount === 0 && !checklistError ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#10b981" />
+            <Text style={styles.loadingText}>Generating checklist...</Text>
+          </View>
+        ) : null}
+
+        {!checklistLoading && !checklistError && totalCount === 0 ? (
+          <View style={styles.emptyChecklist}>
+            <Text style={styles.emptyChecklistIcon}>📋</Text>
+            <Text style={styles.emptyChecklistText}>No time-sensitive tasks found</Text>
+            <Text style={styles.emptyChecklistSubtext}>Pull down or refresh to regenerate</Text>
+          </View>
+        ) : null}
+
+        {totalCount > 0 ? (
+          <View style={styles.checklistContainer}>
+            {checklist.map((item) => (
+              <TouchableOpacity
+                key={item.id}
+                style={styles.checklistItem}
+                onPress={() => toggleChecklistItem(item.id)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.checkbox}>
+                  {item.completed && <View style={styles.checkboxChecked} />}
+                </View>
+                <View style={styles.checklistContent}>
+                  <Text
+                    style={[
+                      styles.checklistTask,
+                      item.completed && styles.checklistTaskCompleted,
+                    ]}
+                  >
+                    {item.task}
+                  </Text>
+                  <Text style={styles.checklistTimeframe}>⏰ {item.timeframe}</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        ) : null}
+      </View>
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Doctor Orders</Text>
@@ -258,6 +406,124 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#0f172a',
     marginBottom: 8,
+  },
+  cardSubtitle: {
+    fontSize: 13,
+    color: '#64748b',
+  },
+  refreshChip: {
+    backgroundColor: '#0f766e',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
+  refreshChipDisabled: {
+    opacity: 0.6,
+  },
+  refreshChipText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 12,
+  },
+  errorBanner: {
+    backgroundColor: '#fef2f2',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#fecaca',
+    marginBottom: 12,
+  },
+  errorText: {
+    color: '#b91c1c',
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  retryButton: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#dc2626',
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 13,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  loadingText: {
+    marginTop: 8,
+    fontSize: 14,
+    color: '#475569',
+  },
+  emptyChecklist: {
+    alignItems: 'center',
+    paddingVertical: 24,
+  },
+  emptyChecklistIcon: {
+    fontSize: 28,
+    marginBottom: 8,
+  },
+  emptyChecklistText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0f172a',
+  },
+  emptyChecklistSubtext: {
+    fontSize: 13,
+    color: '#94a3b8',
+    marginTop: 4,
+  },
+  checklistContainer: {
+    marginTop: 12,
+    gap: 12,
+  },
+  checklistItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  checkbox: {
+    width: 26,
+    height: 26,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#10b981',
+    marginRight: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxChecked: {
+    width: 14,
+    height: 14,
+    borderRadius: 4,
+    backgroundColor: '#10b981',
+  },
+  checklistContent: {
+    flex: 1,
+  },
+  checklistTask: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#0f172a',
+  },
+  checklistTaskCompleted: {
+    textDecorationLine: 'line-through',
+    color: '#94a3b8',
+  },
+  checklistTimeframe: {
+    fontSize: 13,
+    color: '#047857',
+    marginTop: 6,
+    fontWeight: '600',
   },
   listItem: {
     paddingVertical: 10,

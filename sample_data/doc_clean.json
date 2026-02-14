@@ -1,0 +1,97 @@
+[
+  {
+    "patientId": "an1",
+    "timestamp": "2026-02-14T09:30:00Z",
+    "doctorId": "DR001",
+    "doctorName": "Dr. Sarah Johnson",
+    "specialty": "Internal Medicine",
+    "chiefComplaint": "Persistent cough and shortness of breath",
+    "diagnosis": "Acute bronchitis with possible pneumonia",
+    "assessment": "Patient presents with productive cough, fever (101.5°F), and decreased breath sounds in right lower lobe. CXR shows infiltrate consistent with pneumonia.",
+    "plan": "Prescribe Azithromycin 500mg PO x5 days. Order chest X-ray and CBC. Follow-up in 3 days if symptoms persist.",
+    "vitalSigns": {
+      "temperature": 101.5,
+      "bloodPressure": "130/85",
+      "heartRate": 88,
+      "respiratoryRate": 22,
+      "oxygenSaturation": 94
+    },
+    "notes": "Patient is a smoker (10 pack-years). Advised smoking cessation. Will monitor closely for respiratory distress."
+  },
+  {
+    "patientId": "an1",
+    "timestamp": "2026-02-15T14:00:00Z",
+    "doctorId": "DR001",
+    "doctorName": "Dr. Sarah Johnson",
+    "specialty": "Internal Medicine",
+    "chiefComplaint": "Follow-up visit",
+    "diagnosis": "Acute bronchitis - improving",
+    "assessment": "Patient reports decreased cough and improved breathing. Temperature normalized. Chest sounds improved.",
+    "plan": "Continue current antibiotics. Return if symptoms worsen.",
+    "vitalSigns": {
+      "temperature": 98.6,
+      "bloodPressure": "125/80",
+      "heartRate": 76,
+      "respiratoryRate": 18,
+      "oxygenSaturation": 97
+    },
+    "notes": "Good response to treatment. Continue monitoring."
+  },
+  {
+    "patientId": "an2",
+    "timestamp": "2026-02-14T10:45:00Z",
+    "doctorId": "DR003",
+    "doctorName": "Dr. Michael Chen",
+    "specialty": "Cardiology",
+    "chiefComplaint": "Chest pain and palpitations",
+    "diagnosis": "Atrial fibrillation - new onset",
+    "assessment": "ECG shows irregular rhythm consistent with AFib. Heart rate 110-120 bpm. No signs of acute MI.",
+    "plan": "Start metoprolol 25mg BID. Order echo and electrolytes. Refer to cardiology for anticoagulation consult.",
+    "vitalSigns": {
+      "temperature": 98.4,
+      "bloodPressure": "145/92",
+      "heartRate": 118,
+      "respiratoryRate": 16,
+      "oxygenSaturation": 98
+    },
+    "notes": "Patient has history of hypertension. Will need long-term anticoagulation management."
+  },
+  {
+    "patientId": "an2",
+    "timestamp": "2026-02-15T09:15:00Z",
+    "doctorId": "DR003",
+    "doctorName": "Dr. Michael Chen",
+    "specialty": "Cardiology",
+    "chiefComplaint": "Follow-up AFib",
+    "diagnosis": "Atrial fibrillation - rate controlled",
+    "assessment": "Heart rate improved to 70-80 bpm on metoprolol. Patient tolerating medication well.",
+    "plan": "Increase metoprolol to 50mg BID. Start apixaban 5mg BID for anticoagulation. Echo scheduled for next week.",
+    "vitalSigns": {
+      "temperature": 98.6,
+      "bloodPressure": "132/85",
+      "heartRate": 75,
+      "respiratoryRate": 14,
+      "oxygenSaturation": 99
+    },
+    "notes": "Good rate control achieved. Anticoagulation initiated."
+  },
+  {
+    "patientId": "an3",
+    "timestamp": "2026-02-13T15:30:00Z",
+    "doctorId": "DR002",
+    "doctorName": "Dr. Emily Rodriguez",
+    "specialty": "Family Medicine",
+    "chiefComplaint": "Abdominal pain and nausea",
+    "diagnosis": "Acute gastroenteritis",
+    "assessment": "Patient with 2-day history of watery diarrhea, cramping, and vomiting. Mild dehydration noted.",
+    "plan": "Oral rehydration, clear liquid diet. Prescribe ondansetron PRN for nausea. Return if symptoms worsen.",
+    "vitalSigns": {
+      "temperature": 99.1,
+      "bloodPressure": "118/75",
+      "heartRate": 82,
+      "respiratoryRate": 16,
+      "oxygenSaturation": 98
+    },
+    "notes": "Likely viral gastroenteritis. No antibiotic needed at this time."
+  }
+]

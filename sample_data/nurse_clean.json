@@ -1,0 +1,173 @@
+[
+  {
+    "patientId": "an1",
+    "timestamp": "2026-02-14T08:00:00Z",
+    "nurseId": "RN005",
+    "nurseName": "Maria Santos, RN",
+    "shift": "Day",
+    "taskType": "Vital Signs",
+    "vitalSigns": {
+      "temperature": 101.5,
+      "temperatureUnit": "°F",
+      "bloodPressure": "130/85",
+      "heartRate": 88,
+      "respiratoryRate": 22,
+      "oxygenSaturation": 94,
+      "pain": 3,
+      "painScale": "0-10"
+    },
+    "notes": "Patient febrile. Acetaminophen 650mg given PO. Productive cough noted."
+  },
+  {
+    "patientId": "an1",
+    "timestamp": "2026-02-14T12:00:00Z",
+    "nurseId": "RN005",
+    "nurseName": "Maria Santos, RN",
+    "shift": "Day",
+    "taskType": "Medication Administration",
+    "medication": "Azithromycin 500mg PO",
+    "notes": "First dose administered. Patient tolerated well. No adverse reactions noted."
+  },
+  {
+    "patientId": "an1",
+    "timestamp": "2026-02-14T16:00:00Z",
+    "nurseId": "RN007",
+    "nurseName": "James Lee, RN",
+    "shift": "Evening",
+    "taskType": "Vital Signs",
+    "vitalSigns": {
+      "temperature": 100.2,
+      "temperatureUnit": "°F",
+      "bloodPressure": "128/82",
+      "heartRate": 82,
+      "respiratoryRate": 20,
+      "oxygenSaturation": 95,
+      "pain": 2,
+      "painScale": "0-10"
+    },
+    "notes": "Temperature improving. Patient resting comfortably. Encouraged deep breathing exercises."
+  },
+  {
+    "patientId": "an1",
+    "timestamp": "2026-02-14T20:00:00Z",
+    "nurseId": "RN007",
+    "nurseName": "James Lee, RN",
+    "shift": "Evening",
+    "taskType": "IV Site Check",
+    "notes": "No IV currently. Patient on oral medications only."
+  },
+  {
+    "patientId": "an2",
+    "timestamp": "2026-02-14T09:00:00Z",
+    "nurseId": "RN006",
+    "nurseName": "John Williams, RN",
+    "shift": "Day",
+    "taskType": "Vital Signs",
+    "vitalSigns": {
+      "temperature": 98.4,
+      "temperatureUnit": "°F",
+      "bloodPressure": "145/92",
+      "heartRate": 118,
+      "respiratoryRate": 16,
+      "oxygenSaturation": 98,
+      "pain": 5,
+      "painScale": "0-10"
+    },
+    "notes": "Heart rate irregular. ECG shows AFib. Patient reports chest discomfort. Cardiology consult requested."
+  },
+  {
+    "patientId": "an2",
+    "timestamp": "2026-02-14T12:00:00Z",
+    "nurseId": "RN006",
+    "nurseName": "John Williams, RN",
+    "shift": "Day",
+    "taskType": "Medication Administration",
+    "medication": "Metoprolol 25mg PO",
+    "notes": "First dose metoprolol given. Heart rate 110 bpm pre-dose. Will recheck in 1 hour."
+  },
+  {
+    "patientId": "an2",
+    "timestamp": "2026-02-14T13:00:00Z",
+    "nurseId": "RN006",
+    "nurseName": "John Williams, RN",
+    "shift": "Day",
+    "taskType": "Vital Signs",
+    "vitalSigns": {
+      "temperature": 98.6,
+      "temperatureUnit": "°F",
+      "bloodPressure": "138/88",
+      "heartRate": 95,
+      "respiratoryRate": 16,
+      "oxygenSaturation": 98,
+      "pain": 3,
+      "painScale": "0-10"
+    },
+    "notes": "Heart rate decreasing. Patient feeling better. Continue to monitor rhythm."
+  },
+  {
+    "patientId": "an2",
+    "timestamp": "2026-02-15T08:00:00Z",
+    "nurseId": "RN005",
+    "nurseName": "Maria Santos, RN",
+    "shift": "Day",
+    "taskType": "Vital Signs",
+    "vitalSigns": {
+      "temperature": 98.6,
+      "temperatureUnit": "°F",
+      "bloodPressure": "132/85",
+      "heartRate": 75,
+      "respiratoryRate": 14,
+      "oxygenSaturation": 99,
+      "pain": 0,
+      "painScale": "0-10"
+    },
+    "notes": "Heart rate well controlled. No chest pain. Patient ambulating without difficulty."
+  },
+  {
+    "patientId": "an3",
+    "timestamp": "2026-02-13T14:00:00Z",
+    "nurseId": "RN005",
+    "nurseName": "Maria Santos, RN",
+    "shift": "Day",
+    "taskType": "Vital Signs",
+    "vitalSigns": {
+      "temperature": 99.1,
+      "temperatureUnit": "°F",
+      "bloodPressure": "118/75",
+      "heartRate": 82,
+      "respiratoryRate": 16,
+      "oxygenSaturation": 98,
+      "pain": 6,
+      "painScale": "0-10"
+    },
+    "notes": "Abdominal cramping. Multiple episodes of diarrhea. Oral rehydration started."
+  },
+  {
+    "patientId": "an3",
+    "timestamp": "2026-02-13T18:00:00Z",
+    "nurseId": "RN007",
+    "nurseName": "James Lee, RN",
+    "shift": "Evening",
+    "taskType": "Intake/Output Monitoring",
+    "notes": "Intake: 1200mL oral fluids. Output: 800mL urine, multiple loose stools. Continue hydration."
+  },
+  {
+    "patientId": "an1",
+    "timestamp": "2026-02-15T08:00:00Z",
+    "nurseId": "RN005",
+    "nurseName": "Maria Santos, RN",
+    "shift": "Day",
+    "taskType": "Vital Signs",
+    "vitalSigns": {
+      "temperature": 98.6,
+      "temperatureUnit": "°F",
+      "bloodPressure": "125/80",
+      "heartRate": 76,
+      "respiratoryRate": 18,
+      "oxygenSaturation": 97,
+      "pain": 1,
+      "painScale": "0-10"
+    },
+    "notes": "Temperature normalized. Cough much improved. Patient ready for discharge."
+  }
+]

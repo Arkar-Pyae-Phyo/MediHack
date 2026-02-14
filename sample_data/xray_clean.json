@@ -1,0 +1,86 @@
+[
+  {
+    "patientId": "an1",
+    "timestamp": "2026-02-14T10:45:00Z",
+    "orderId": "IMG-2024-001",
+    "examType": "Chest X-Ray (PA and Lateral)",
+    "indication": "Cough, fever, shortness of breath - rule out pneumonia",
+    "technique": "Two-view chest radiograph acquired",
+    "radiologistId": "RAD002",
+    "radiologistName": "Dr. Robert Martinez, MD",
+    "status": "Final Report",
+    "findings": {
+      "summary": "Right lower lobe infiltrate consistent with pneumonia",
+      "heart": "Normal cardiac silhouette",
+      "lungs": "Patchy opacity in right lower lobe. No pleural effusion. Left lung clear.",
+      "bones": "No acute fractures. Mild degenerative changes in thoracic spine.",
+      "mediastinum": "Normal mediastinal contour"
+    },
+    "impression": "Right lower lobe pneumonia. No pleural effusion or pneumothorax.",
+    "recommendations": "Clinical correlation recommended. Follow-up imaging in 4-6 weeks to ensure resolution.",
+    "imagingUrl": "/images/xray/an1_chest_20260214.dcm"
+  },
+  {
+    "patientId": "an1",
+    "timestamp": "2026-02-15T11:00:00Z",
+    "orderId": "IMG-2024-002",
+    "examType": "Chest X-Ray (PA)",
+    "indication": "Follow-up pneumonia",
+    "technique": "Single-view chest radiograph",
+    "radiologistId": "RAD002",
+    "radiologistName": "Dr. Robert Martinez, MD",
+    "status": "Final Report",
+    "findings": {
+      "summary": "Interval improvement in right lower lobe infiltrate",
+      "heart": "Normal cardiac silhouette",
+      "lungs": "Decreased density in right lower lobe compared to prior. No new infiltrates.",
+      "bones": "Stable appearance",
+      "mediastinum": "Normal"
+    },
+    "impression": "Improving right lower lobe pneumonia. Good response to antibiotic therapy.",
+    "recommendations": "Continue current treatment. Repeat imaging only if clinically indicated.",
+    "imagingUrl": "/images/xray/an1_chest_20260215.dcm"
+  },
+  {
+    "patientId": "an2",
+    "timestamp": "2026-02-14T14:30:00Z",
+    "orderId": "IMG-2024-003",
+    "examType": "Chest X-Ray (PA and Lateral)",
+    "indication": "Atrial fibrillation, chest pain - evaluate cardiac size",
+    "technique": "Two-view chest radiograph",
+    "radiologistId": "RAD003",
+    "radiologistName": "Dr. Lisa Wong, MD",
+    "status": "Final Report",
+    "findings": {
+      "summary": "Mildly enlarged cardiac silhouette, lungs clear",
+      "heart": "Cardiothoracic ratio 0.52 (mildly enlarged). Left atrial enlargement noted.",
+      "lungs": "Clear lung fields bilaterally. No effusion or edema.",
+      "bones": "No acute abnormality",
+      "mediastinum": "Normal aortic contour"
+    },
+    "impression": "Mild cardiomegaly with left atrial enlargement, consistent with chronic AFib. No acute cardiopulmonary process.",
+    "recommendations": "Echocardiogram recommended for detailed cardiac assessment.",
+    "imagingUrl": "/images/xray/an2_chest_20260214.dcm"
+  },
+  {
+    "patientId": "an3",
+    "timestamp": "2026-02-13T16:30:00Z",
+    "orderId": "IMG-2024-004",
+    "examType": "Abdominal X-Ray (KUB)",
+    "indication": "Abdominal pain, diarrhea",
+    "technique": "Single supine view of abdomen",
+    "radiologistId": "RAD002",
+    "radiologistName": "Dr. Robert Martinez, MD",
+    "status": "Final Report",
+    "findings": {
+      "summary": "Normal bowel gas pattern, no obstruction",
+      "bowel": "Normal distribution of bowel gas. No dilated loops or air-fluid levels.",
+      "organs": "Liver and spleen normal in size. Kidneys symmetrical.",
+      "bones": "No acute fractures",
+      "soft tissues": "No abnormal calcifications or masses"
+    },
+    "impression": "Normal abdominal radiograph. No evidence of obstruction or perforation.",
+    "recommendations": "Clinical management as appropriate. No further imaging indicated at this time.",
+    "imagingUrl": "/images/xray/an3_abd_20260213.dcm"
+  }
+]

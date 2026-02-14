@@ -26,39 +26,39 @@ type Patient = {
   priority: 'high' | 'medium' | 'low';
 };
 
-// Mock patient data
+// Mock patient data (IDs match sample_data for delta summary)
 const mockPatients: Patient[] = [
   {
-    id: '1',
-    name: 'Avery Thompson',
-    mrn: 'HT-482991',
-    age: 61,
-    diagnosis: 'Type 2 Diabetes, Hypertension',
-    status: 'stable',
+    id: 'an1',
+    name: 'John Anderson',
+    mrn: 'HT-AN001',
+    age: 52,
+    diagnosis: 'Acute Bronchitis, Possible Pneumonia',
+    status: 'improving',
     roomNumber: '302',
-    lastUpdate: '2026-02-14 08:30',
+    lastUpdate: '2026-02-15 14:00',
     priority: 'medium',
   },
   {
-    id: '2',
-    name: 'Michael Chen',
-    mrn: 'HT-482992',
-    age: 58,
-    diagnosis: 'CHF, Renal Disease',
-    status: 'critical',
+    id: 'an2',
+    name: 'Margaret Chen',
+    mrn: 'HT-AN002',
+    age: 67,
+    diagnosis: 'Atrial Fibrillation - New Onset',
+    status: 'stable',
     roomNumber: '401',
-    lastUpdate: '2026-02-14 09:15',
+    lastUpdate: '2026-02-15 09:15',
     priority: 'high',
   },
   {
-    id: '3',
-    name: 'Sarah Johnson',
-    mrn: 'HT-482993',
-    age: 45,
-    diagnosis: 'Pneumonia',
+    id: 'an3',
+    name: 'Robert Garcia',
+    mrn: 'HT-AN003',
+    age: 43,
+    diagnosis: 'Acute Gastroenteritis',
     status: 'improving',
     roomNumber: '205',
-    lastUpdate: '2026-02-14 07:45',
+    lastUpdate: '2026-02-13 15:30',
     priority: 'low',
   },
   {
@@ -118,7 +118,7 @@ const mockPatients: Patient[] = [
   },
 ];
 
-const DashboardScreen = ({ onLogout }: { onLogout: () => void }) => {
+const DashboardScreen = ({ onLogout, onPatientPress }: { onLogout: () => void; onPatientPress?: (patient: Patient) => void }) => {
   const [loading, setLoading] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<PatientStatus | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -150,8 +150,9 @@ const DashboardScreen = ({ onLogout }: { onLogout: () => void }) => {
   }, []);
 
   const handlePatientPress = (patient: Patient) => {
-    // TODO: Navigate to patient detail
-    console.log('Patient pressed:', patient.name);
+    if (onPatientPress) {
+      onPatientPress(patient);
+    }
   };
 
   const clearSearch = () => {

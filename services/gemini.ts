@@ -2,12 +2,7 @@ const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 const BASE_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 
 // List of Gemini models to try in order (from fastest to most capable)
-const GEMINI_MODELS = [
-  'gemini-2.5-flash',
-  'gemini-2.0-flash',
-  'gemini-1.5-flash',
-  'gemini-1.5-flash-8b',
-];
+const GEMINI_MODELS = ['gemini-2.5-flash'];
 
 if (!GEMINI_API_KEY) {
   console.warn('GEMINI API key is missing. Set EXPO_PUBLIC_GEMINI_API_KEY in your app config.');
