@@ -56,8 +56,10 @@ const LoginScreen = ({ onLogin }: LoginScreenProps) => {
       setDetectedRole({ label: 'Pharmacist', color: '#7C3AED', icon: Pill });
     } else if (id.startsWith('ADM')) { // เพิ่ม Admin
       setDetectedRole({ label: 'Admin', color: '#DC2626', icon: ShieldCheck });
-    } else if (id.startsWith('FAM')) {
+    } else if (id.startsWith('FAM')) { // เพิ่ม Family
       setDetectedRole({ label: 'Family', color: '#EA580C', icon: Users });
+    } else if (id.startsWith('PAT')) { // เพิ่ม Patient
+      setDetectedRole({ label: 'Patient', color: '#EA580C', icon: Users });
     } else {
       setDetectedRole(null);
     }
@@ -141,6 +143,7 @@ const LoginScreen = ({ onLogin }: LoginScreenProps) => {
                   <Text style={styles.hintText}>• Pharmacist: <Text style={{fontWeight:'700', color:'#7C3AED'}}>PHAxxxx</Text></Text>
                   <Text style={styles.hintText}>• Admin: <Text style={{fontWeight:'700', color:'#DC2626'}}>ADMxxxx</Text></Text>
                   <Text style={styles.hintText}>• Family: <Text style={{fontWeight:'700', color:'#EA580C'}}>FAMxxxx</Text></Text>
+                  <Text style={styles.hintText}>• Patient: <Text style={{fontWeight:'700', color:'#EA580C'}}>PATxxxx</Text></Text>
                 </View>
               </View>
             )}
