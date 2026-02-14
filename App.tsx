@@ -7,6 +7,8 @@ import { Ionicons } from '@expo/vector-icons';
 
 // --- Screens: หมวดพนักงาน (Staff) ---
 import DoctorDashboardScreen from './screens/DoctorScreen/DoctorDashboardScreen';
+import DoctorHome from './screens/DoctorScreen/Home';
+import Bardoctor from './components/bardoctor';
 import NurseTasksScreen from './screens/NurseTasksScreen';
 import PharmacistReviewScreen from './screens/PharmacistReviewScreen';
 import LoginScreen from './screens/LoginScreen';
@@ -33,6 +35,7 @@ type PatientTabParamList = {
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<PatientTabParamList>();
+const DoctorTab = createBottomTabNavigator();
 
 const navigationTheme = {
   ...DefaultTheme,
@@ -92,7 +95,29 @@ export default function App() {
           <>
             {user.role === 'Doctor' && (
               <Stack.Screen name="Doctor">
-                {() => <DoctorDashboardScreen onLogout={handleLogout} />}
+                {() => (
+                  <DoctorTab.Navigator
+                    screenOptions={{ headerShown: false }}
+                    tabBar={(props) => {
+                      const routeName = props.state.routes[props.state.index].name;
+                      const activeTab = routeName === 'Home' ? 'home' : 'dashboard';
+                      const onNavigate = (tab: 'home' | 'dashboard') => {
+                        const target = tab === 'home' ? 'Home' : 'Dashboard';
+                        props.navigation.navigate(target as never);
+                      };
+                      return (
+                        <Bardoctor
+                          activeTab={activeTab}
+                          onNavigate={onNavigate}
+                          onLogout={handleLogout}
+                        />
+                      );
+                    }}
+                  >
+                    <DoctorTab.Screen name="Home">{() => <DoctorHome onLogout={handleLogout} />}</DoctorTab.Screen>
+                    <DoctorTab.Screen name="Dashboard">{() => <DoctorDashboardScreen onLogout={handleLogout} />}</DoctorTab.Screen>
+                  </DoctorTab.Navigator>
+                )}
               </Stack.Screen>
             )}
             {user.role === 'Nurse' && (
