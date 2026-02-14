@@ -171,7 +171,6 @@ const NurseTasksScreen = ({ onLogout }: { onLogout: () => void }) => {
 
   return (
     <View style={styles.container}>
-      <RoleHeader role="Nurse" onLogout={onLogout} />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.content}
@@ -226,6 +225,7 @@ const NurseTasksScreen = ({ onLogout }: { onLogout: () => void }) => {
         ))}
       </View>
       </ScrollView>
+      <RoleHeader role="Nurse" onLogout={onLogout} />
     </View>
   );
 };

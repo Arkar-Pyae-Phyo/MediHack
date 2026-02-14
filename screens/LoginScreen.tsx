@@ -106,7 +106,7 @@ const LoginScreen = ({ onLogin }: LoginScreenProps) => {
               <User size={20} color="#64748B" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="Enter your ID (e.g. DOC-1234)"
+                placeholder="Enter your ID (e.g. DOC1234)"
                 placeholderTextColor="#94A3B8"
                 value={staffId}
                 onChangeText={setStaffId}
@@ -134,10 +134,10 @@ const LoginScreen = ({ onLogin }: LoginScreenProps) => {
               <View style={styles.hintBox}>
                 <View style={styles.hintTextContainer}>
                   <Text style={styles.hintTitle}>Use these prefixes:</Text>
-                  <Text style={styles.hintText}>• Doctor: <Text style={{fontWeight:'700', color:'#2563EB'}}>DOC-xxxx</Text></Text>
-                  <Text style={styles.hintText}>• Nurse: <Text style={{fontWeight:'700', color:'#059669'}}>NUR-xxxx</Text></Text>
-                  <Text style={styles.hintText}>• Pharmacist: <Text style={{fontWeight:'700', color:'#7C3AED'}}>PHA-xxxx</Text></Text>
-                  <Text style={styles.hintText}>• Family: <Text style={{fontWeight:'700', color:'#EA580C'}}>FAM-xxxx</Text></Text>
+                  <Text style={styles.hintText}>• Doctor: <Text style={{fontWeight:'700', color:'#2563EB'}}>DOCxxxx</Text></Text>
+                  <Text style={styles.hintText}>• Nurse: <Text style={{fontWeight:'700', color:'#059669'}}>NURxxxx</Text></Text>
+                  <Text style={styles.hintText}>• Pharmacist: <Text style={{fontWeight:'700', color:'#7C3AED'}}>PHAxxxx</Text></Text>
+                  <Text style={styles.hintText}>• Family: <Text style={{fontWeight:'700', color:'#EA580C'}}>FAMxxxx</Text></Text>
                 </View>
               </View>
             )}

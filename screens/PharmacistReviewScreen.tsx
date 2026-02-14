@@ -169,7 +169,6 @@ const PharmacistReviewScreen = ({ onLogout }: { onLogout: () => void }) => {
 
   return (
     <View style={styles.container}>
-      <RoleHeader role="Pharmacist" onLogout={onLogout} />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.content}
@@ -209,6 +208,7 @@ const PharmacistReviewScreen = ({ onLogout }: { onLogout: () => void }) => {
         ))}
       </View>
       </ScrollView>
+      <RoleHeader role="Pharmacist" onLogout={onLogout} />
     </View>
   );
 };
