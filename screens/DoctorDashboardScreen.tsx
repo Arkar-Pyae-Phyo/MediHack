@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 
+import RoleHeader from '../components/RoleHeader';
 import { askGemini } from '../services/gemini';
 
 type PatientRecord = {
@@ -167,7 +168,7 @@ const parseDoctorResponse = (text: string): DoctorSections => {
   return sections;
 };
 
-const DoctorDashboardScreen = () => {
+const DoctorDashboardScreen = ({ onLogout }: { onLogout: () => void }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sections, setSections] = useState<DoctorSections>(defaultSections);
@@ -198,16 +199,18 @@ const DoctorDashboardScreen = () => {
   }, [fetchSummary]);
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchSummary} />}
-    >
-      <View style={styles.header}>
-        <Text style={styles.title}>Doctor Dashboard</Text>
-        <Text style={styles.subtitle}>{patientHeader}</Text>
-        <Text style={styles.metaText}>Primary: {mockPatientRecord.demographics.primaryPhysician}</Text>
-      </View>
+    <View style={styles.container}>
+      <RoleHeader role="Doctor" onLogout={onLogout} />
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.content}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchSummary} />}
+      >
+        <View style={styles.header}>
+          <Text style={styles.title}>Dashboard</Text>
+          <Text style={styles.subtitle}>{patientHeader}</Text>
+          <Text style={styles.metaText}>Primary: {mockPatientRecord.demographics.primaryPhysician}</Text>
+        </View>
 
       <View style={styles.card}>
         <View style={styles.cardHeader}>
@@ -267,7 +270,8 @@ const DoctorDashboardScreen = () => {
           </View>
         ))}
       </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 
@@ -287,6 +291,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8fafc',
+  },
+  scrollView: {
+    flex: 1,
   },
   content: {
     padding: 16,

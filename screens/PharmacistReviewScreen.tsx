@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 
+import RoleHeader from '../components/RoleHeader';
 import { askGemini } from '../services/gemini';
 
 type MedicationProfile = {
@@ -138,7 +139,7 @@ const parsePharmacistResponse = (text: string): PharmacistSections => {
   };
 };
 
-const PharmacistReviewScreen = () => {
+const PharmacistReviewScreen = ({ onLogout }: { onLogout: () => void }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sections, setSections] = useState<PharmacistSections>(defaultSections);
@@ -167,15 +168,17 @@ const PharmacistReviewScreen = () => {
   }, [fetchReview]);
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchReview} />}
-    >
-      <View style={styles.header}>
-        <Text style={styles.title}>Pharmacist Review</Text>
-        <Text style={styles.subtitle}>Active medications: {medsCount}</Text>
-      </View>
+    <View style={styles.container}>
+      <RoleHeader role="Pharmacist" onLogout={onLogout} />
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.content}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchReview} />}
+      >
+        <View style={styles.header}>
+          <Text style={styles.title}>Medication Review</Text>
+          <Text style={styles.subtitle}>Active medications: {medsCount}</Text>
+        </View>
 
       <View style={styles.card}>
         <View style={styles.cardHeader}>
@@ -205,7 +208,8 @@ const PharmacistReviewScreen = () => {
           </View>
         ))}
       </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 
@@ -237,6 +241,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8fafc',
+  },
+  scrollView: {
+    flex: 1,
   },
   content: {
     padding: 16,

@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 
+import RoleHeader from '../components/RoleHeader';
 import { askGemini } from '../services/gemini';
 
 type PatientFiles = {
@@ -108,7 +109,7 @@ const buildFollowUpPrompt = (files: PatientFiles, question: string) => {
   ].join('\n');
 };
 
-const PatientSummaryScreen = () => {
+const PatientSummaryScreen = ({ onLogout }: { onLogout: () => void }) => {
   const [summarySections, setSummarySections] = useState<GeminiSection[]>([]);
   const [summaryError, setSummaryError] = useState<string | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
@@ -197,17 +198,19 @@ const PatientSummaryScreen = () => {
   }, [answerLoading, question]);
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      refreshControl={<RefreshControl refreshing={summaryLoading} onRefresh={fetchSummary} />}
-    >
-      <View style={styles.header}>
-        <Text style={styles.title}>Patient Summary</Text>
-        <Text style={styles.subtitle}>
-          {patientFiles.profile.name} • {patientFiles.profile.age} • {patientFiles.profile.gender}
-        </Text>
-      </View>
+    <View style={styles.container}>
+      <RoleHeader role="Patient" onLogout={onLogout} />
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.content}
+        refreshControl={<RefreshControl refreshing={summaryLoading} onRefresh={fetchSummary} />}
+      >
+        <View style={styles.header}>
+          <Text style={styles.title}>Your Health Summary</Text>
+          <Text style={styles.subtitle}>
+            {patientFiles.profile.name} • {patientFiles.profile.age} • {patientFiles.profile.gender}
+          </Text>
+        </View>
 
       <View style={styles.card}>
         <View style={styles.cardHeader}>
@@ -298,7 +301,8 @@ const PatientSummaryScreen = () => {
         {answerError ? <Text style={styles.errorText}>{answerError}</Text> : null}
         {answer ? <Text style={styles.answerText}>{answer}</Text> : null}
       </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 
@@ -306,6 +310,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f1f5f9',
+  },
+  scrollView: {
+    flex: 1,
   },
   content: {
     padding: 16,

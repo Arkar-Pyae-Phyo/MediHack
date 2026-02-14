@@ -53,6 +53,10 @@ export default function App() {
     }
   };
 
+  const handleLogout = () => {
+    setUser(null);
+  };
+
   const RoleScreen = user ? roleScreenMap[user.role] : null;
 
   return (
@@ -61,7 +65,7 @@ export default function App() {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {user && RoleScreen ? (
           <Stack.Screen name={user.role}>
-            {() => <RoleScreen />}
+            {() => <RoleScreen onLogout={handleLogout} />}
           </Stack.Screen>
         ) : (
           <Stack.Screen name="Login">

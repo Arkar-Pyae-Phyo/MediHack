@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import type { TextStyle } from 'react-native';
 
+import RoleHeader from '../components/RoleHeader';
 import { askGemini } from '../services/gemini';
 
 type NursingTask = {
@@ -141,7 +142,7 @@ const trendStyle = (direction: VitalTrend['direction']): TextStyle => ({
   fontWeight: '500',
 });
 
-const NurseTasksScreen = () => {
+const NurseTasksScreen = ({ onLogout }: { onLogout: () => void }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [geminiTasks, setGeminiTasks] = useState<GeminiTasks>(defaultGeminiTasks);
@@ -169,15 +170,17 @@ const NurseTasksScreen = () => {
   }, [fetchTasks]);
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchTasks} />}
-    >
-      <View style={styles.header}>
-        <Text style={styles.title}>Nurse Tasks</Text>
-        <Text style={styles.subtitle}>Current tasks: {taskCount}</Text>
-      </View>
+    <View style={styles.container}>
+      <RoleHeader role="Nurse" onLogout={onLogout} />
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.content}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchTasks} />}
+      >
+        <View style={styles.header}>
+          <Text style={styles.title}>Tasks</Text>
+          <Text style={styles.subtitle}>Current tasks: {taskCount}</Text>
+        </View>
 
       <View style={styles.card}>
         <View style={styles.cardHeader}>
@@ -222,7 +225,8 @@ const NurseTasksScreen = () => {
           </View>
         ))}
       </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 
@@ -242,6 +246,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8fafc',
+  },
+  scrollView: {
+    flex: 1,
   },
   content: {
     padding: 16,
