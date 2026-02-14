@@ -54,6 +54,8 @@ const LoginScreen = ({ onLogin }: LoginScreenProps) => {
       setDetectedRole({ label: 'Nurse', color: '#059669', icon: Activity });
     } else if (id.startsWith('PHA')) { // เพิ่ม Pharmacist
       setDetectedRole({ label: 'Pharmacist', color: '#7C3AED', icon: Pill });
+    } else if (id.startsWith('ADM')) { // เพิ่ม Admin
+      setDetectedRole({ label: 'Admin', color: '#DC2626', icon: ShieldCheck });
     } else if (id.startsWith('FAM')) {
       setDetectedRole({ label: 'Family', color: '#EA580C', icon: Users });
     } else {
@@ -106,7 +108,7 @@ const LoginScreen = ({ onLogin }: LoginScreenProps) => {
               <User size={20} color="#64748B" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="Enter your ID (e.g. DOC1234)"
+                placeholder="Enter your ID (e.g. DOC1234, ADM1234)"
                 placeholderTextColor="#94A3B8"
                 value={staffId}
                 onChangeText={setStaffId}
@@ -137,6 +139,7 @@ const LoginScreen = ({ onLogin }: LoginScreenProps) => {
                   <Text style={styles.hintText}>• Doctor: <Text style={{fontWeight:'700', color:'#2563EB'}}>DOCxxxx</Text></Text>
                   <Text style={styles.hintText}>• Nurse: <Text style={{fontWeight:'700', color:'#059669'}}>NURxxxx</Text></Text>
                   <Text style={styles.hintText}>• Pharmacist: <Text style={{fontWeight:'700', color:'#7C3AED'}}>PHAxxxx</Text></Text>
+                  <Text style={styles.hintText}>• Admin: <Text style={{fontWeight:'700', color:'#DC2626'}}>ADMxxxx</Text></Text>
                   <Text style={styles.hintText}>• Family: <Text style={{fontWeight:'700', color:'#EA580C'}}>FAMxxxx</Text></Text>
                 </View>
               </View>
