@@ -54,8 +54,8 @@ const LoginScreen = ({ onLogin }: LoginScreenProps) => {
       setDetectedRole({ label: 'Nurse', color: '#059669', icon: Activity });
     } else if (id.startsWith('PHA')) { // เพิ่ม Pharmacist
       setDetectedRole({ label: 'Pharmacist', color: '#7C3AED', icon: Pill });
-    } else if (id.startsWith('FAM')) {
-      setDetectedRole({ label: 'Family', color: '#EA580C', icon: Users });
+    } else if (id.startsWith('PAT')) { // เพิ่ม Patient
+      setDetectedRole({ label: 'Patient', color: '#EA580C', icon: Users });
     } else {
       setDetectedRole(null);
     }
@@ -137,7 +137,7 @@ const LoginScreen = ({ onLogin }: LoginScreenProps) => {
                   <Text style={styles.hintText}>• Doctor: <Text style={{fontWeight:'700', color:'#2563EB'}}>DOCxxxx</Text></Text>
                   <Text style={styles.hintText}>• Nurse: <Text style={{fontWeight:'700', color:'#059669'}}>NURxxxx</Text></Text>
                   <Text style={styles.hintText}>• Pharmacist: <Text style={{fontWeight:'700', color:'#7C3AED'}}>PHAxxxx</Text></Text>
-                  <Text style={styles.hintText}>• Family: <Text style={{fontWeight:'700', color:'#EA580C'}}>FAMxxxx</Text></Text>
+                  <Text style={styles.hintText}>• Patient: <Text style={{fontWeight:'700', color:'#EA580C'}}>PATxxxx</Text></Text>
                 </View>
               </View>
             )}
