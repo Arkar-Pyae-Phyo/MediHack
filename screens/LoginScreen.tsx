@@ -1,226 +1,399 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
+  View,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  SafeAreaView,
+  ActivityIndicator,
+  Alert,
+  LayoutAnimation,
+  UIManager,
 } from 'react-native';
+import { 
+  User, 
+  Lock, 
+  Eye, 
+  EyeOff, 
+  Activity, 
+  Stethoscope, 
+  Pill, 
+  Users, 
+  ShieldCheck, 
+  Info,
+  ChevronDown, 
+  ChevronUp    
+} from 'lucide-react-native';
 
-type RoleOption = {
-  key: string;
-  label: string;
-  description: string;
-};
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 type LoginScreenProps = {
-  onLogin: (profile: { name: string; age: number; role: string }) => void;
+  onLogin: (user: { id: string; name: string; role: string }) => void;
 };
 
-const ROLE_OPTIONS: RoleOption[] = [
-  { key: 'Patient', label: 'Patient', description: 'Track personal care plans and updates.' },
-  { key: 'Doctor', label: 'Doctor', description: 'Review clinical dashboards and actions.' },
-  { key: 'Nurse', label: 'Nurse', description: 'Coordinate bedside tasks and vitals.' },
-  { key: 'Pharmacist', label: 'Pharmacist', description: 'Monitor medications and safety alerts.' },
-];
-
 const LoginScreen = ({ onLogin }: LoginScreenProps) => {
-  const [name, setName] = useState('');
-  const [age, setAge] = useState('');
-  const [selectedRole, setSelectedRole] = useState<string | null>(null);
+  const [staffId, setStaffId] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showHint, setShowHint] = useState(false);
+  const [detectedRole, setDetectedRole] = useState<{ label: string; color: string; icon: any } | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const parsedAge = Number(age.trim());
-  const isAgeValid = !Number.isNaN(parsedAge) && parsedAge > 0 && parsedAge < 120;
-  const isDisabled = !name.trim() || !selectedRole || !isAgeValid;
+  // --- Logic: Smart Role Detection (แก้ให้ถูกต้องตรงนี้) ---
+  useEffect(() => {
+    const id = staffId.toUpperCase();
+    if (id.startsWith('DOC')) {
+      setDetectedRole({ label: 'Doctor', color: '#2563EB', icon: Stethoscope });
+    } else if (id.startsWith('NUR')) {
+      setDetectedRole({ label: 'Nurse', color: '#059669', icon: Activity });
+    } else if (id.startsWith('PHA')) { // เพิ่ม Pharmacist
+      setDetectedRole({ label: 'Pharmacist', color: '#7C3AED', icon: Pill });
+    } else if (id.startsWith('FAM')) {
+      setDetectedRole({ label: 'Family', color: '#EA580C', icon: Users });
+    } else {
+      setDetectedRole(null);
+    }
+  }, [staffId]);
 
-  const handleSubmit = () => {
-    if (isDisabled || !selectedRole || !isAgeValid) {
+  const toggleHint = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setShowHint(!showHint);
+  };
+
+  const handleLogin = () => {
+    if (!staffId || !password) {
+      Alert.alert('Missing Info', 'Please enter both Staff ID and Password.');
       return;
     }
-    onLogin({ name: name.trim(), age: parsedAge, role: selectedRole });
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      const roleName = detectedRole ? detectedRole.label : 'Guest';
+      const mockName = roleName === 'Doctor' ? 'Dr. Somsak' : 'Staff Member';
+      onLogin({ id: staffId, name: mockName, role: roleName });
+    }, 1500);
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView 
-        style={styles.scrollView}
-        contentContainerStyle={styles.inner}
-        keyboardShouldPersistTaps="handled"
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
       >
-        <Text style={styles.title}>Welcome to CareMind</Text>
-        <Text style={styles.subtitle}>Tell us who you are and choose one role.</Text>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          
+          <View style={styles.headerContainer}>
+            <View style={styles.logoIconContainer}>
+              <Activity size={32} color="#2563EB" />
+            </View>
+            <Text style={styles.appName}>Synapse<Text style={styles.appNameHighlight}>.OS</Text></Text>
+            <Text style={styles.appTagline}>Healthcare Management & Communication</Text>
+          </View>
 
-        <Text style={styles.label}>Your name</Text>
-        <TextInput
-          value={name}
-          onChangeText={setName}
-          placeholder="Jane Doe"
-          placeholderTextColor="#cbd5f5"
-          style={styles.input}
-          autoCapitalize="words"
-        />
+          <View style={styles.card}>
+            
+            <View style={styles.labelRow}>
+              <Text style={styles.label}>STAFF ID</Text>
+            </View>
+            
+            <View style={styles.inputContainer}>
+              <User size={20} color="#64748B" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your ID (e.g. DOC-1234)"
+                placeholderTextColor="#94A3B8"
+                value={staffId}
+                onChangeText={setStaffId}
+                autoCapitalize="characters"
+              />
+            </View>
 
-        <Text style={styles.label}>Your age</Text>
-        <TextInput
-          value={age}
-          onChangeText={setAge}
-          placeholder="30"
-          placeholderTextColor="#cbd5f5"
-          style={styles.input}
-          keyboardType="number-pad"
-        />
-
-        <Text style={[styles.label, styles.roleLabel]}>Select your role</Text>
-        <View style={styles.rolesContainer}>
-          {ROLE_OPTIONS.map((role) => {
-            const isActive = selectedRole === role.key;
-            return (
-              <TouchableOpacity
-                key={role.key}
-                style={[styles.roleCard, isActive ? styles.roleCardActive : undefined]}
-                onPress={() => setSelectedRole(role.key)}
-              >
-                <View style={[styles.radioOuter, isActive ? styles.radioOuterActive : undefined]}>
-                  {isActive ? <View style={styles.radioInner} /> : null}
-                </View>
-                <View style={styles.roleTextBlock}>
-                  <Text style={[styles.roleTitle, isActive ? styles.roleTitleActive : undefined]}>{role.label}</Text>
-                  <Text style={styles.roleDescription}>{role.description}</Text>
-                </View>
+            {/* Toggle Button */}
+            {!detectedRole && (
+              <TouchableOpacity style={styles.helpToggle} onPress={toggleHint}>
+                <Info size={14} color="#2563EB" style={{ marginRight: 4 }} />
+                <Text style={styles.helpToggleText}>
+                  {showHint ? "Hide ID formats" : "How do I format my ID?"}
+                </Text>
+                {showHint ? (
+                  <ChevronUp size={14} color="#2563EB" />
+                ) : (
+                  <ChevronDown size={14} color="#2563EB" />
+                )}
               </TouchableOpacity>
-            );
-          })}
-        </View>
+            )}
 
-        <TouchableOpacity
-          style={[styles.submitButton, isDisabled ? styles.submitButtonDisabled : undefined]}
-          onPress={handleSubmit}
-          disabled={isDisabled}
-        >
-          <Text style={styles.submitText}>Enter Workspace</Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </KeyboardAvoidingView>
+            {/* Hint Box (ส่วนแสดงผล ข้อความเท่านั้น ห้ามใส่ Logic ตรงนี้) */}
+            {showHint && !detectedRole && (
+              <View style={styles.hintBox}>
+                <View style={styles.hintTextContainer}>
+                  <Text style={styles.hintTitle}>Use these prefixes:</Text>
+                  <Text style={styles.hintText}>• Doctor: <Text style={{fontWeight:'700', color:'#2563EB'}}>DOC-xxxx</Text></Text>
+                  <Text style={styles.hintText}>• Nurse: <Text style={{fontWeight:'700', color:'#059669'}}>NUR-xxxx</Text></Text>
+                  <Text style={styles.hintText}>• Pharmacist: <Text style={{fontWeight:'700', color:'#7C3AED'}}>PHA-xxxx</Text></Text>
+                  <Text style={styles.hintText}>• Family: <Text style={{fontWeight:'700', color:'#EA580C'}}>FAM-xxxx</Text></Text>
+                </View>
+              </View>
+            )}
+
+            {/* Smart Badge */}
+            {detectedRole && (
+              <View style={[styles.roleBadge, { backgroundColor: detectedRole.color + '15' }]}>
+                <detectedRole.icon size={16} color={detectedRole.color} />
+                <Text style={[styles.roleBadgeText, { color: detectedRole.color }]}>
+                  {detectedRole.label} Role Detected
+                </Text>
+              </View>
+            )}
+
+            <Text style={styles.label}>PASSWORD</Text>
+            <View style={styles.inputContainer}>
+              <Lock size={20} color="#64748B" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="••••••••"
+                placeholderTextColor="#94A3B8"
+                secureTextEntry={!showPassword}
+                value={password}
+                onChangeText={setPassword}
+              />
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                {showPassword ? (
+                  <EyeOff size={20} color="#64748B" />
+                ) : (
+                  <Eye size={20} color="#64748B" />
+                )}
+              </TouchableOpacity>
+            </View>
+            
+            <TouchableOpacity style={styles.forgotButton}>
+              <Text style={styles.forgotText}>Forgot Password?</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.loginButton} 
+              onPress={handleLogin}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#FFF" />
+              ) : (
+                <Text style={styles.loginButtonText}>Login to Workspace</Text>
+              )}
+            </TouchableOpacity>
+
+          </View>
+
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>
+              Need help accessing the system?
+            </Text>
+            <TouchableOpacity style={styles.supportLink}>
+              <Text style={styles.footerSubText}>Contact IT Support</Text>
+            </TouchableOpacity>
+            
+            <View style={styles.complianceRow}>
+              <ShieldCheck size={14} color="#94A3B8" />
+              <Text style={styles.complianceText}>SECURE CONNECTION</Text>
+            </View>
+          </View>
+
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0f172a',
+    backgroundColor: '#F8FAFC',
   },
-  scrollView: {
-    flex: 1,
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    padding: 24,
   },
-  inner: {
-    paddingHorizontal: 24,
-    paddingTop: 72,
-    paddingBottom: 60,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: '#f8fafc',
-  },
-  subtitle: {
-    marginTop: 12,
-    fontSize: 18,
-    color: '#94a3b8',
-    lineHeight: 26,
-  },
-  label: {
-    marginTop: 36,
-    marginBottom: 8,
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#cbd5f5',
-  },
-  roleLabel: {
-    marginTop: 28,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#334155',
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 16,
-    color: '#f8fafc',
-    backgroundColor: '#1e293b',
-  },
-  rolesContainer: {
-    marginTop: 8,
-    gap: 12,
-  },
-  roleCard: {
-    flexDirection: 'row',
+  headerContainer: {
     alignItems: 'center',
+    marginBottom: 32,
+  },
+  logoIconContainer: {
+    width: 64,
+    height: 64,
+    backgroundColor: '#DBEAFE',
     borderRadius: 16,
-    padding: 16,
-    backgroundColor: '#111c2e',
-    borderWidth: 1,
-    borderColor: '#1f2a3c',
-  },
-  roleCardActive: {
-    borderColor: '#38bdf8',
-    backgroundColor: '#0f172a',
-  },
-  radioOuter: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 2,
-    borderColor: '#475569',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 16,
+    marginBottom: 16,
   },
-  radioOuterActive: {
-    borderColor: '#38bdf8',
+  appName: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginBottom: 8,
   },
-  radioInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#38bdf8',
+  appNameHighlight: {
+    color: '#2563EB',
   },
-  roleTextBlock: {
+  appTagline: {
+    fontSize: 14,
+    color: '#64748B',
+    fontWeight: '500',
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  labelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  label: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#64748B',
+    letterSpacing: 0.5,
+  },
+  helpToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    alignSelf: 'flex-start',
+    paddingVertical: 4,
+    paddingHorizontal: 2,
+  },
+  helpToggleText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#2563EB',
+    marginRight: 4,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F1F5F9',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    height: 56,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  inputIcon: {
+    marginRight: 12,
+  },
+  input: {
+    flex: 1,
+    fontSize: 16,
+    color: '#0F172A',
+    fontWeight: '500',
+  },
+  hintBox: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  hintTextContainer: {
     flex: 1,
   },
-  roleTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#e2e8f0',
-  },
-  roleTitleActive: {
-    color: '#38bdf8',
-  },
-  roleDescription: {
-    marginTop: 4,
-    fontSize: 14,
-    color: '#94a3b8',
-    lineHeight: 20,
-  },
-  submitButton: {
-    marginTop: 32,
-    borderRadius: 18,
-    paddingVertical: 16,
-    alignItems: 'center',
-    backgroundColor: '#38bdf8',
-  },
-  submitButtonDisabled: {
-    backgroundColor: '#1f2937',
-  },
-  submitText: {
-    fontSize: 18,
+  hintTitle: {
+    fontSize: 12,
     fontWeight: '700',
-    color: '#0f172a',
+    color: '#64748B',
+    marginBottom: 4,
+  },
+  hintText: {
+    fontSize: 12,
+    color: '#64748B',
+    lineHeight: 18,
+  },
+  roleBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    marginTop: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  roleBadgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+    marginLeft: 6,
+  },
+  forgotButton: {
+    alignSelf: 'flex-end',
+    marginTop: 12,
+  },
+  forgotText: {
+    color: '#2563EB',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  loginButton: {
+    backgroundColor: '#2563EB',
+    height: 56,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 24,
+    shadowColor: '#2563EB',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  loginButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  footer: {
+    alignItems: 'center',
+    marginTop: 40,
+  },
+  footerText: {
+    color: '#64748B',
+    fontSize: 14,
+  },
+  supportLink: {
+    marginTop: 4,
+  },
+  footerSubText: {
+    color: '#2563EB',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  complianceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 24,
+    gap: 6,
+    opacity: 0.6
+  },
+  complianceText: {
+    color: '#94A3B8',
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
 });
 
